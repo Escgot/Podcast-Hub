@@ -307,14 +307,10 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
           </div>
         </div>
 
-        {/* List Mode Actions (Approve / Deploy) */}
-        {isAdmin && isList && (
+        {/* List Mode Actions (Approve) */}
+        {isAdmin && isList && !suggestion.is_approved && (
           <div className="mt-8 flex gap-3">
-            {!suggestion.is_approved ? (
-              <button onClick={() => onApprove(suggestion.id)} className="bg-white text-black hover:bg-zinc-200 px-6 py-2.5 rounded-full text-xs font-bold transition-all">Approve Submission</button>
-            ) : (
-              <button onClick={() => onMoveToLibrary(suggestion)} className="bg-white text-black hover:bg-zinc-200 px-6 py-2.5 rounded-full text-xs font-bold transition-all">Deploy to Library</button>
-            )}
+            <button onClick={() => onApprove(suggestion.id)} className="bg-white text-black hover:bg-zinc-200 px-6 py-2.5 rounded-full text-xs font-bold transition-all">Approve Submission</button>
           </div>
         )}
 
@@ -856,22 +852,22 @@ export default function Home() {
           <div className="flex w-full sm:w-auto overflow-x-auto" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
             <div className="flex mx-auto sm:mx-0 gap-1 bg-black/50 p-1 rounded-full border border-white/5 relative flex-shrink-0">
               {["library", "suggestions", "quran"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`relative px-5 py-2 text-xs font-medium rounded-full transition-colors duration-300 z-10 ${activeTab === tab ? "text-black" : "text-zinc-400 hover:text-white"
-                  }`}
-              >
-                {activeTab === tab && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-white rounded-full -z-10"
-                    transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
-                  />
-                )}
-                <span className="capitalize">{tab}</span>
-              </button>
-            ))}
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`relative px-5 py-2 text-xs font-medium rounded-full transition-colors duration-300 z-10 ${activeTab === tab ? "text-black" : "text-zinc-400 hover:text-white"
+                    }`}
+                >
+                  {activeTab === tab && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-white rounded-full -z-10"
+                      transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
+                    />
+                  )}
+                  <span className="capitalize">{tab}</span>
+                </button>
+              ))}
             </div>
           </div>
         </nav>
@@ -983,7 +979,7 @@ export default function Home() {
 
               {/* APPROVED LOG */}
               <div className="space-y-8">
-                {renderLayoutToolbar("Approved Log", approvedSuggestions.length)}
+                {renderLayoutToolbar("More Suggestions", approvedSuggestions.length)}
                 {approvedSuggestions.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/5 rounded-[2rem]">
                     <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No Approvals Yet</span>
@@ -1033,7 +1029,7 @@ export default function Home() {
               {/* AUDIT PIPELINE */}
               {isAdmin && (
                 <div className="space-y-8">
-                  {renderLayoutToolbar("Audit Pipeline (Quran)", unapprovedQurans.length)}
+                  {renderLayoutToolbar("Quran", unapprovedQurans.length)}
                   {unapprovedQurans.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/5 rounded-[2rem]">
                       <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">Queue Empty</span>
@@ -1064,7 +1060,7 @@ export default function Home() {
 
               {/* APPROVED LOG */}
               <div className="space-y-8">
-                {renderLayoutToolbar("Approved Log (Quran)", approvedQurans.length)}
+                {renderLayoutToolbar("Quran", approvedQurans.length)}
                 {approvedQurans.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/5 rounded-[2rem]">
                     <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No Approvals Yet</span>
