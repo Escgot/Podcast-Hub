@@ -1,5 +1,7 @@
 "use client";
 
+import { motion, AnimatePresence } from "framer-motion";
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -34,7 +36,12 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
   };
 
   return (
-    <div
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
+      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
       ref={setNodeRef}
       style={style}
       className={`group relative flex transition-all duration-500 ${isList
@@ -146,7 +153,7 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
           )
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -175,7 +182,12 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
   };
 
   return (
-    <div
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
+      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
       ref={setNodeRef}
       style={style}
       className={`group relative flex transition-all duration-500 ${isList
@@ -307,7 +319,7 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
           )
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -500,13 +512,29 @@ export default function Home() {
         <p className="text-sm text-zinc-500 font-medium">{count} Podcasts</p>
       </div>
       <div className="flex items-center gap-2">
-        <div className="flex bg-black p-1 rounded-full border border-white/5">
-          <button onClick={() => setViewMode("list")} className={`p-2.5 rounded-full transition-all duration-300 ${viewMode === "list" ? "bg-zinc-800 text-white" : "text-zinc-600 hover:text-zinc-300"}`} title="List View">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
-          </button>
-          <button onClick={() => setViewMode("grid")} className={`p-2.5 rounded-full transition-all duration-300 ${viewMode === "grid" ? "bg-zinc-800 text-white" : "text-zinc-600 hover:text-zinc-300"}`} title="Grid View">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-          </button>
+        <div className="flex bg-black p-1 rounded-full border border-white/5 relative">
+          {["list", "grid"].map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode as "list" | "grid")}
+              className={`relative p-2.5 rounded-full transition-colors duration-300 z-10 ${viewMode === mode ? "text-white" : "text-zinc-600 hover:text-zinc-300"
+                }`}
+              title={`${mode} View`}
+            >
+              {viewMode === mode && (
+                <motion.div
+                  layoutId="activeView"
+                  className="absolute inset-0 bg-zinc-800 rounded-full -z-10"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              {mode === "list" ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+              )}
+            </button>
+          ))}
         </div>
       </div>
     </div>
@@ -524,9 +552,25 @@ export default function Home() {
           <h1 onClick={handleAdminUnlock} className="text-sm font-bold tracking-wide text-white cursor-pointer select-none flex items-center gap-3 hover:opacity-70 transition-opacity">
             🎧 Podcast Hub {isAdmin && <span className="text-[9px] border border-white/20 text-zinc-300 px-2 py-0.5 rounded-full uppercase tracking-widest">Admin</span>}
           </h1>
-          <div className="flex gap-1 bg-black/50 p-1 rounded-full border border-white/5">
-            <button onClick={() => setActiveTab("library")} className={`px-5 py-2 text-xs font-medium rounded-full transition-all duration-300 ${activeTab === "library" ? "bg-white text-black" : "text-zinc-400 hover:text-white"}`}>Library</button>
-            <button onClick={() => setActiveTab("suggestions")} className={`px-5 py-2 text-xs font-medium rounded-full transition-all duration-300 ${activeTab === "suggestions" ? "bg-white text-black" : "text-zinc-400 hover:text-white"}`}>Suggestions</button>
+          {/* ---> PREMIUM TAB SLIDER <--- */}
+          <div className="flex gap-1 bg-black/50 p-1 rounded-full border border-white/5 relative">
+            {["library", "suggestions"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`relative px-5 py-2 text-xs font-medium rounded-full transition-colors duration-300 z-10 ${activeTab === tab ? "text-black" : "text-zinc-400 hover:text-white"
+                  }`}
+              >
+                {activeTab === tab && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 bg-white rounded-full -z-10"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="capitalize">{tab}</span>
+              </button>
+            ))}
           </div>
         </nav>
       </div>
@@ -565,18 +609,20 @@ export default function Home() {
               ) : (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={bookmarks} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
-                    <div className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
-                      {bookmarks.map((bookmark) => (
-                        <SortableBookmarkItem
-                          key={bookmark.id}
-                          bookmark={bookmark}
-                          handleDelete={handleDelete}
-                          handleSaveNotes={handleSaveNotes}
-                          isAdmin={isAdmin}
-                          viewMode={viewMode}
-                        />
-                      ))}
-                    </div>
+                    <motion.div layout className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
+                      <AnimatePresence mode="popLayout">
+                        {bookmarks.map((bookmark) => (
+                          <SortableBookmarkItem
+                            key={bookmark.id}
+                            bookmark={bookmark}
+                            handleDelete={handleDelete}
+                            handleSaveNotes={handleSaveNotes}
+                            isAdmin={isAdmin}
+                            viewMode={viewMode}
+                          />
+                        ))}
+                      </AnimatePresence>
+                    </motion.div>
                   </SortableContext>
                 </DndContext>
               )}
