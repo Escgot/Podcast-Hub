@@ -371,9 +371,16 @@ export default function Home() {
 
   const processItems = (items: any[]) => {
     let filtered = items.filter((item) => {
-      const matchesTitle = item.episode_title?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesAuthor = item.author?.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesTitle || matchesAuthor;
+      const query = searchQuery.toLowerCase();
+      const matchesTitle = item.episode_title?.toLowerCase().includes(query);
+
+      // FIX: Changed from item.author to item.podcast_name (which holds the YouTube channel name)
+      const matchesPodcastName = item.podcast_name?.toLowerCase().includes(query);
+
+      // Bonus: Also allow searching by platform (e.g., typing "youtube" or "spotify")
+      const matchesPlatform = item.platform?.toLowerCase().includes(query);
+
+      return matchesTitle || matchesPodcastName || matchesPlatform;
     });
 
     if (sortBy === "views") {
@@ -611,7 +618,7 @@ export default function Home() {
       <div className="fixed top-4 sm:top-6 left-0 right-0 z-50 flex justify-center px-4 sm:px-6 pointer-events-none">
         <nav className="bg-zinc-900/75 backdrop-blur-2xl border border-white/5 rounded-full px-4 sm:px-6 py-2 sm:py-3 flex items-center justify-between w-full max-w-3xl shadow-2xl pointer-events-auto gap-4">
           <h1 onClick={handleAdminUnlock} className="text-xs sm:text-sm font-bold tracking-wide text-white cursor-pointer select-none flex items-center gap-2 hover:opacity-70 transition-opacity whitespace-nowrap">
-            🎧 <span className="hidden min-[400px]:inline">Hub</span> {isAdmin && <span className="text-[8px] border border-white/20 text-zinc-300 px-1.5 py-0.5 rounded-full uppercase tracking-widest">Admin</span>}
+            🎧 <span className="hidden min-[400px]:inline">Podcast Hub</span> {isAdmin && <span className="text-[8px] border border-white/20 text-zinc-300 px-1.5 py-0.5 rounded-full uppercase tracking-widest">Admin</span>}
           </h1>
 
           {/* ---> PREMIUM TAB SLIDER <--- */}

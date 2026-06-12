@@ -1,4 +1,4 @@
-# 🎧 Media Hub
+# 🎧 Podcast Hub
 
 A premium, highly responsive, and mobile-optimized dashboard for curating, organizing, and managing podcast bookmarks and media links. Built with a sleek, iOS-inspired (HIG) interface, it features seamless drag-and-drop organization, URL scraping, and an admin approval pipeline for community suggestions.
 
