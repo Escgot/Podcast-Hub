@@ -869,7 +869,6 @@ export default function Home() {
                             onMoveToLibrary={handleMoveToLibrary}
                             handleSaveNotes={handleSaveSuggestionNotes}
                             onLinkClick={handleLinkClick}
-                            onLike={handleLike}
                           />
                         ))}
                       </div>
