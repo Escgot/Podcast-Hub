@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 
-// ---> VERCEL FIX 1: Force Vercel to NEVER cache this API route <---
 export const dynamic = 'force-dynamic';
+
+// Helper function to extract the 11-character YouTube video ID
+function getYouTubeId(url: string) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
 
 export async function POST(request: Request) {
     try {
@@ -28,65 +34,84 @@ export async function POST(request: Request) {
             platform = "Apple Podcasts";
         }
 
-        // ---> VERCEL FIX 2: If it's YouTube, ALWAYS use the official unblockable API first <---
+        // ---> STRATEGY FOR YOUTUBE <---
         if (platform === "YouTube") {
-            try {
-                const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
-                // 'no-store' forces Vercel to actually make the request every time
-                const oembedRes = await fetch(oembedUrl, { cache: 'no-store' });
+            const videoId = getYouTubeId(url);
+            const apiKey = process.env.YOUTUBE_API_KEY;
 
-                if (oembedRes.ok) {
-                    const oembedData = await oembedRes.json();
-                    episode_title = oembedData.title;
-                    thumbnail_url = oembedData.thumbnail_url;
-                    author = oembedData.author_name;
+            // OPTION A: If you have an API key, use Google's official unblockable endpoint
+            if (videoId && apiKey) {
+                try {
+                    const apiRes = await fetch(
+                        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${apiKey}`,
+                        { cache: 'no-store' }
+                    );
+                    if (apiRes.ok) {
+                        const apiData = await apiRes.json();
+                        if (apiData.items && apiData.items.length > 0) {
+                            const item = apiData.items[0];
+                            episode_title = item.snippet.title;
+                            description = item.snippet.description || '';
+                            thumbnail_url = item.snippet.thumbnails?.maxres?.url || item.snippet.thumbnails?.high?.url || '';
+                            author = item.snippet.channelTitle;
+                            publish_date = item.snippet.publishedAt; // e.g. "2024-03-22T14:00:00Z"
+                            view_count = item.statistics.viewCount; // e.g. "54231"
+                        }
+                    }
+                } catch (err) {
+                    console.error("Official YouTube Data API failed, using fallback:", err);
+                }
+            }
+
+            // OPTION B: Fallback to oEmbed if no API key is set yet (gets Title/Thumb, sets default views/dates)
+            if (!episode_title) {
+                try {
+                    const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+                    const oembedRes = await fetch(oembedUrl, { cache: 'no-store' });
+                    if (oembedRes.ok) {
+                        const oembedData = await oembedRes.json();
+                        episode_title = oembedData.title;
+                        thumbnail_url = oembedData.thumbnail_url;
+                        author = oembedData.author_name;
+                        description = "Add description manually or set up a YOUTUBE_API_KEY to fetch details automatically.";
+                        publish_date = new Date().toISOString().split('T')[0]; // temporary placeholder date
+                        view_count = "0"; // temporary placeholder views
+                    }
+                } catch (err) {
+                    console.error("YouTube oEmbed fallback failed:", err);
+                }
+            }
+        } else {
+            // ---> STRATEGY FOR NON-YOUTUBE PLATFORMS (Spotify/Apple work perfectly via HTML scraping on Vercel) <---
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                    },
+                    cache: 'no-store'
+                });
+
+                if (response.ok) {
+                    const html = await response.text();
+                    const $ = cheerio.load(html);
+
+                    episode_title = $('meta[property="og:title"]').attr('content') || $('title').text() || '';
+                    description = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
+                    thumbnail_url = $('meta[property="og:image"]').attr('content') || '';
+                    author = $('link[itemprop="name"]').attr('content') || $('meta[name="author"]').attr('content') || $('meta[property="og:site_name"]').attr('content') || '';
+                    publish_date = $('meta[itemprop="datePublished"]').attr('content') || $('meta[property="article:published_time"]').attr('content') || '';
+                    view_count = $('meta[itemprop="interactionCount"]').attr('content') || '';
                 }
             } catch (err) {
-                console.error("YouTube oEmbed failed:", err);
+                console.error("HTML scraping failed for alternative platform:", err);
             }
         }
 
-        // 3. Now we fetch the HTML to get the remaining pieces (like description, date, and views)
-        // We use 'no-store' here too so Vercel doesn't cache a Bot-blocked page!
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Cookie': 'CONSENT=YES+cb.20230101-17-p0.en+FX+478'
-            },
-            cache: 'no-store'
-        });
-
-        if (response.ok) {
-            const html = await response.text();
-            const $ = cheerio.load(html);
-
-            // Only overwrite title/author/thumbnail if they are still empty
-            if (!episode_title) episode_title = $('meta[property="og:title"]').attr('content') || $('title').text() || '';
-            if (!description) description = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
-            if (!thumbnail_url) thumbnail_url = $('meta[property="og:image"]').attr('content') || '';
-            if (!author) {
-                author = $('link[itemprop="name"]').attr('content') ||
-                    $('meta[name="author"]').attr('content') ||
-                    $('meta[property="og:site_name"]').attr('content') || '';
-            }
-
-            // Extract the tricky metrics
-            publish_date = $('meta[itemprop="datePublished"]').attr('content') || $('meta[property="article:published_time"]').attr('content') || '';
-            view_count = $('meta[itemprop="interactionCount"]').attr('content') || '';
-
-            if (!view_count && platform === "YouTube") {
-                const viewMatch = html.match(/"viewCount":"(\d+)"/);
-                if (viewMatch && viewMatch[1]) {
-                    view_count = viewMatch[1];
-                }
-            }
-        }
-
-        // Final cleanup
-        if (!episode_title || episode_title.includes("Before you continue") || episode_title === "YouTube") {
-            episode_title = 'Unknown Title (Bot Blocked)';
-        }
+        // Final sanitation checks so the database never receives empty values
+        if (!episode_title) episode_title = 'Unknown Title';
+        if (!publish_date) publish_date = new Date().toISOString().split('T')[0];
+        if (!view_count) view_count = '0';
 
         return NextResponse.json({
             url,
