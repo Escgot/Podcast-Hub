@@ -355,11 +355,16 @@ export default function Home() {
   const [suggestionUrl, setSuggestionUrl] = useState("");
   const [suggestionLoading, setSuggestionLoading] = useState(false);
 
+  const [qurans, setQurans] = useState<any[]>([]);
+  const [quranUrl, setQuranUrl] = useState("");
+  const [quranLoading, setQuranLoading] = useState(false);
+
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
   useEffect(() => {
     fetchBookmarks();
     fetchSuggestions();
+    fetchQurans();
 
     const channel = supabase
       .channel('schema-db-changes')
@@ -395,6 +400,22 @@ export default function Home() {
           });
         });
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'quran' }, (payload) => {
+        setQurans((prev) => {
+          let next = [...prev];
+          if (payload.eventType === 'INSERT') {
+            if (!next.some(q => q.id === payload.new.id)) next = [payload.new, ...next];
+          } else if (payload.eventType === 'UPDATE') {
+            next = next.map(q => q.id === payload.new.id ? payload.new : q);
+          } else if (payload.eventType === 'DELETE') {
+            next = next.filter(q => q.id !== payload.old.id);
+          }
+          return next.sort((a, b) => {
+            if (a.sort_order === b.sort_order) return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            return (a.sort_order || 0) - (b.sort_order || 0);
+          });
+        });
+      })
       .subscribe();
 
     return () => {
@@ -410,6 +431,11 @@ export default function Home() {
   const fetchSuggestions = async () => {
     const { data } = await supabase.from("suggestions").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
     if (data) setSuggestions(data);
+  };
+
+  const fetchQurans = async () => {
+    const { data } = await supabase.from("quran").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+    if (data) setQurans(data);
   };
 
   const handleAdminUnlock = () => {
@@ -452,12 +478,15 @@ export default function Home() {
     window.open(item.url, "_blank");
 
     const newClicks = (item.hub_clicks || 0) + 1;
-    const isSuggestion = item.hasOwnProperty('is_approved');
-    const table = isSuggestion ? "suggestions" : "bookmarks";
+    let table = "bookmarks";
+    if (activeTab === "suggestions") table = "suggestions";
+    if (activeTab === "quran") table = "quran";
 
     // Update state optimistically
-    if (isSuggestion) {
+    if (table === "suggestions") {
       setSuggestions(prev => prev.map(s => s.id === item.id ? { ...s, hub_clicks: newClicks } : s));
+    } else if (table === "quran") {
+      setQurans(prev => prev.map(q => q.id === item.id ? { ...q, hub_clicks: newClicks } : q));
     } else {
       setBookmarks(prev => prev.map(b => b.id === item.id ? { ...b, hub_clicks: newClicks } : b));
     }
@@ -629,6 +658,99 @@ export default function Home() {
     }
   };
 
+  // --- QURAN FUNCTIONS ---
+  const handleSubmitQuran = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setQuranLoading(true);
+    try {
+      const res = await fetch("/api/scrape", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: quranUrl }) });
+      const previewData = await res.json();
+      if (res.ok) {
+        const minSortOrder = qurans.length > 0 ? Math.min(...qurans.map(q => q.sort_order ?? 0)) : 0;
+        const { data, error } = await supabase.from("quran").insert([{
+          url: previewData.url,
+          podcast_name: previewData.author || previewData.platform,
+          episode_title: previewData.episode_title,
+          platform: previewData.platform,
+          description: previewData.description,
+          thumbnail_url: previewData.thumbnail_url,
+          publish_date: previewData.publish_date,
+          view_count: previewData.view_count,
+          hub_clicks: 0,
+          sort_order: minSortOrder - 1,
+          is_approved: false
+        }]).select();
+        if (error) { alert("Database Error: " + error.message); }
+        else if (data) {
+          setQurans([data[0], ...qurans]); // Prepend locally
+          setQuranUrl("");
+          alert("Quran link submitted for review.");
+        }
+      } else { alert("Could not pull data."); }
+    } catch (err) { console.error("Scrape failed", err); } finally { setQuranLoading(false); }
+  };
+
+  const handleApproveQuran = async (id: string) => {
+    await supabase.from("quran").update({ is_approved: true }).eq("id", id);
+    setQurans(qurans.map(q => q.id === id ? { ...q, is_approved: true } : q));
+  };
+
+  const handleRejectQuran = async (id: string) => {
+    await supabase.from("quran").delete().eq("id", id);
+    setQurans(qurans.filter(q => q.id !== id));
+  };
+
+  const handleSaveQuranNotes = async (id: string, notes: string) => {
+    await supabase.from("quran").update({ notes }).eq("id", id);
+    setQurans(qurans.map(q => q.id === id ? { ...q, notes } : q));
+  };
+
+  const handleMoveQuranToLibrary = async (quranItem: any) => {
+    const minSortOrder = bookmarks.length > 0 ? Math.min(...bookmarks.map(b => b.sort_order ?? 0)) : 0;
+    const { data } = await supabase.from("bookmarks").insert([{
+      url: quranItem.url,
+      podcast_name: quranItem.podcast_name,
+      episode_title: quranItem.episode_title,
+      platform: quranItem.platform,
+      description: quranItem.description,
+      thumbnail_url: quranItem.thumbnail_url,
+      publish_date: quranItem.publish_date,
+      view_count: quranItem.view_count,
+      hub_clicks: quranItem.hub_clicks || 0,
+      sort_order: minSortOrder - 1
+    }]).select();
+
+    if (data) {
+      setBookmarks([data[0], ...bookmarks]); // Prepend locally
+      handleRejectQuran(quranItem.id);
+    }
+  };
+
+  const handleQuranDragEnd = (event: any, listType: "approved" | "unapproved") => {
+    const { active, over } = event;
+    if (active && over && active.id !== over.id && isAdmin) {
+      setQurans((allItems) => {
+        const isAppr = listType === "approved";
+        const targetList = allItems.filter(q => q.is_approved === isAppr);
+        const otherList = allItems.filter(q => q.is_approved !== isAppr);
+
+        const oldIndex = targetList.findIndex(item => item.id === active.id);
+        const newIndex = targetList.findIndex(item => item.id === over.id);
+
+        if (oldIndex === -1 || newIndex === -1) return allItems;
+
+        const reorderedList = arrayMove(targetList, oldIndex, newIndex);
+
+        const updatedReorderedList = reorderedList.map((item, index) => {
+          supabase.from("quran").update({ sort_order: index }).eq("id", item.id).then();
+          return { ...item, sort_order: index };
+        });
+
+        return [...updatedReorderedList, ...otherList];
+      });
+    }
+  };
+
   const renderLayoutToolbar = (title: string, count: number) => (
     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/5 pb-6">
       <div className="space-y-1">
@@ -713,18 +835,27 @@ export default function Home() {
     ? processItems(suggestions.filter(s => s.is_approved))
     : processItems(suggestions.filter(s => s.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
+  const unapprovedQurans = sortBy === "views"
+    ? processItems(qurans.filter(q => !q.is_approved))
+    : processItems(qurans.filter(q => !q.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+  const approvedQurans = sortBy === "views"
+    ? processItems(qurans.filter(q => q.is_approved))
+    : processItems(qurans.filter(q => q.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
   const filteredBookmarks = processItems(bookmarks);
 
   return (
     <div className="min-h-screen bg-black text-zinc-100 antialiased selection:bg-white/30 pb-24">
       {/* Premium Floating Navigation Island */}
       <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-6 pointer-events-none">
-        <nav className="bg-zinc-900/60 backdrop-blur-2xl border border-white/5 rounded-full px-6 py-3 flex items-center justify-between w-full max-w-3xl shadow-2xl pointer-events-auto">
-          <h1 onClick={handleAdminUnlock} className="text-sm font-bold tracking-wide text-white cursor-pointer select-none flex items-center gap-3 hover:opacity-70 transition-opacity">
+        <nav className="bg-zinc-900/60 backdrop-blur-2xl border border-white/5 rounded-[2rem] sm:rounded-full px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 w-full max-w-3xl shadow-2xl pointer-events-auto">
+          <h1 onClick={handleAdminUnlock} className="text-sm font-bold tracking-wide text-white cursor-pointer select-none flex items-center gap-3 hover:opacity-70 transition-opacity w-full sm:w-auto justify-center sm:justify-start">
             🎧 Podcast Hub {isAdmin && <span className="text-[9px] border border-white/20 text-zinc-300 px-2 py-0.5 rounded-full uppercase tracking-widest">Admin</span>}
           </h1>
-          <div className="flex gap-1 bg-black/50 p-1 rounded-full border border-white/5 relative">
-            {["library", "suggestions"].map((tab) => (
+          <div className="flex w-full sm:w-auto overflow-x-auto" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+            <div className="flex mx-auto sm:mx-0 gap-1 bg-black/50 p-1 rounded-full border border-white/5 relative flex-shrink-0">
+              {["library", "suggestions", "quran"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -741,12 +872,13 @@ export default function Home() {
                 <span className="capitalize">{tab}</span>
               </button>
             ))}
+            </div>
           </div>
         </nav>
       </div>
 
       <main className="max-w-5xl mx-auto px-6 space-y-16 pt-36">
-        {activeTab === "library" ? (
+        {activeTab === "library" && (
           <>
             {isAdmin && (
               <div className="bg-zinc-900/30 border border-white/5 p-8 rounded-[2rem] shadow-2xl">
@@ -799,7 +931,9 @@ export default function Home() {
               )}
             </div>
           </>
-        ) : (
+        )}
+
+        {activeTab === "suggestions" && (
           <div className="space-y-16">
             <div className="bg-zinc-900/30 border border-white/5 p-8 rounded-[2rem] shadow-2xl">
               <div className="mb-6">
@@ -868,6 +1002,87 @@ export default function Home() {
                             onReject={handleRejectSuggestion}
                             onMoveToLibrary={handleMoveToLibrary}
                             handleSaveNotes={handleSaveSuggestionNotes}
+                            onLinkClick={handleLinkClick}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "quran" && (
+          <div className="space-y-16">
+            <div className="bg-zinc-900/30 border border-white/5 p-8 rounded-[2rem] shadow-2xl">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-white tracking-tight">Any Quran links?</h2>
+                <p className="text-zinc-500 text-sm mt-1">Share with us your favourite Quran recitations or media links.</p>
+              </div>
+              <form onSubmit={handleSubmitQuran} className="flex gap-4">
+                <input type="url" required placeholder="https://..." value={quranUrl} onChange={(e) => setQuranUrl(e.target.value)} className="flex-1 px-6 py-4 text-sm bg-black border border-white/10 rounded-full focus:border-white/30 text-white placeholder-zinc-600 focus:outline-none transition-all" />
+                <button type="submit" disabled={quranLoading} className="bg-white text-black px-8 py-4 rounded-full font-bold text-sm hover:bg-zinc-200 disabled:opacity-50 transition-all">
+                  {quranLoading ? "Processing..." : "Submit"}
+                </button>
+              </form>
+            </div>
+
+            <div className="space-y-16 w-full">
+              {/* AUDIT PIPELINE */}
+              {isAdmin && (
+                <div className="space-y-8">
+                  {renderLayoutToolbar("Audit Pipeline (Quran)", unapprovedQurans.length)}
+                  {unapprovedQurans.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/5 rounded-[2rem]">
+                      <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">Queue Empty</span>
+                    </div>
+                  ) : (
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleQuranDragEnd(e, "unapproved")}>
+                      <SortableContext items={unapprovedQurans} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
+                        <div className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
+                          {unapprovedQurans.map((quranItem) => (
+                            <SortableSuggestionItem
+                              key={quranItem.id}
+                              suggestion={quranItem}
+                              isAdmin={isAdmin}
+                              viewMode={viewMode}
+                              onApprove={handleApproveQuran}
+                              onReject={handleRejectQuran}
+                              onMoveToLibrary={handleMoveQuranToLibrary}
+                              handleSaveNotes={handleSaveQuranNotes}
+                              onLinkClick={handleLinkClick}
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  )}
+                </div>
+              )}
+
+              {/* APPROVED LOG */}
+              <div className="space-y-8">
+                {renderLayoutToolbar("Approved Log (Quran)", approvedQurans.length)}
+                {approvedQurans.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/5 rounded-[2rem]">
+                    <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No Approvals Yet</span>
+                  </div>
+                ) : (
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleQuranDragEnd(e, "approved")}>
+                    <SortableContext items={approvedQurans} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
+                      <div className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
+                        {approvedQurans.map((quranItem) => (
+                          <SortableSuggestionItem
+                            key={quranItem.id}
+                            suggestion={quranItem}
+                            isAdmin={isAdmin}
+                            viewMode={viewMode}
+                            onApprove={handleApproveQuran}
+                            onReject={handleRejectQuran}
+                            onMoveToLibrary={handleMoveQuranToLibrary}
+                            handleSaveNotes={handleSaveQuranNotes}
                             onLinkClick={handleLinkClick}
                           />
                         ))}
