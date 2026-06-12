@@ -12,7 +12,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 // --- SUB-COMPONENT: Ultra-Premium Library Card ---
-function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin, viewMode }: any) {
+function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin, viewMode, onLinkClick }: any) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: bookmark.id,
     disabled: !isAdmin
@@ -110,10 +110,18 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
                   </span>
                 </>
               )}
+              {isAdmin && bookmark.hub_clicks > 0 && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-zinc-700 flex-shrink-0" />
+                  <span className="text-zinc-400">
+                    {bookmark.hub_clicks} Hub Clicks
+                  </span>
+                </>
+              )}
             </div>
 
             <h3 className="text-xl font-semibold text-zinc-100 tracking-tight leading-snug">
-              <a href={bookmark.url} target="_blank" rel="noreferrer" className="hover:text-white transition-colors line-clamp-2">
+              <a href={bookmark.url} onClick={(e) => onLinkClick(e, bookmark)} target="_blank" rel="noreferrer" className="hover:text-white transition-colors line-clamp-2 cursor-pointer">
                 {bookmark.episode_title}
               </a>
             </h3>
@@ -157,7 +165,7 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
 }
 
 // --- SUB-COMPONENT: Ultra-Premium Sortable Suggestion Card ---
-function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onReject, onMoveToLibrary, handleSaveNotes }: any) {
+function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onReject, onMoveToLibrary, handleSaveNotes, onLinkClick }: any) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: suggestion.id,
     disabled: !isAdmin
@@ -263,10 +271,18 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
                   </span>
                 </>
               )}
+              {isAdmin && suggestion.hub_clicks > 0 && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-zinc-700 flex-shrink-0" />
+                  <span className="text-zinc-400">
+                    {suggestion.hub_clicks} Hub Clicks
+                  </span>
+                </>
+              )}
             </div>
 
             <h3 className="text-xl font-semibold text-zinc-100 tracking-tight leading-snug">
-              <a href={suggestion.url} target="_blank" rel="noreferrer" className="hover:text-white transition-colors line-clamp-2">
+              <a href={suggestion.url} onClick={(e) => onLinkClick(e, suggestion)} target="_blank" rel="noreferrer" className="hover:text-white transition-colors line-clamp-2 cursor-pointer">
                 {suggestion.episode_title}
               </a>
             </h3>
@@ -328,7 +344,7 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"default" | "views">("default");
+  const [sortBy, setSortBy] = useState<"default" | "views" | "clicked">("default");
 
   const [bookmarks, setBookmarks] = useState<any[]>([]);
   const [url, setUrl] = useState("");
@@ -380,8 +396,34 @@ export default function Home() {
         const viewsB = parseInt(b.view_count) || 0;
         return viewsB - viewsA;
       });
+    } else if (sortBy === "clicked") {
+      filtered = [...filtered].sort((a, b) => {
+        const clicksA = a.hub_clicks || 0;
+        const clicksB = b.hub_clicks || 0;
+        return clicksB - clicksA;
+      });
     }
     return filtered;
+  };
+
+  // Interaction Handlers
+  const handleLinkClick = async (e: React.MouseEvent, item: any) => {
+    e.preventDefault();
+    window.open(item.url, "_blank");
+
+    const newClicks = (item.hub_clicks || 0) + 1;
+    const isSuggestion = item.hasOwnProperty('is_approved');
+    const table = isSuggestion ? "suggestions" : "bookmarks";
+
+    // Update state optimistically
+    if (isSuggestion) {
+      setSuggestions(prev => prev.map(s => s.id === item.id ? { ...s, hub_clicks: newClicks } : s));
+    } else {
+      setBookmarks(prev => prev.map(b => b.id === item.id ? { ...b, hub_clicks: newClicks } : b));
+    }
+
+    // Update database
+    await supabase.from(table).update({ hub_clicks: newClicks }).eq("id", item.id);
   };
 
   // --- LIBRARY FUNCTIONS ---
@@ -412,6 +454,7 @@ export default function Home() {
       thumbnail_url: preview.thumbnail_url,
       publish_date: preview.publish_date,
       view_count: preview.view_count,
+      hub_clicks: 0,
       sort_order: minSortOrder - 1
     }]).select();
 
@@ -466,6 +509,7 @@ export default function Home() {
           thumbnail_url: previewData.thumbnail_url,
           publish_date: previewData.publish_date,
           view_count: previewData.view_count,
+          hub_clicks: 0,
           sort_order: minSortOrder - 1,
           is_approved: false
         }]).select();
@@ -507,6 +551,7 @@ export default function Home() {
       thumbnail_url: suggestion.thumbnail_url,
       publish_date: suggestion.publish_date,
       view_count: suggestion.view_count,
+      hub_clicks: suggestion.hub_clicks || 0,
       sort_order: minSortOrder - 1
     }]).select();
 
@@ -569,7 +614,8 @@ export default function Home() {
           <div className="flex bg-black p-1 rounded-full border border-white/5 relative">
             {[
               { id: "default", label: "Default Sort" },
-              { id: "views", label: "Most Viewed" }
+              { id: "views", label: "Most Viewed" },
+              ...(isAdmin ? [{ id: "clicked", label: "Most Clicked" }] : [])
             ].map((option) => (
               <button
                 key={option.id}
@@ -703,6 +749,7 @@ export default function Home() {
                             handleSaveNotes={handleSaveNotes}
                             isAdmin={isAdmin}
                             viewMode={viewMode}
+                            onLinkClick={handleLinkClick}
                           />
                         ))}
                       </AnimatePresence>
@@ -750,6 +797,7 @@ export default function Home() {
                               onReject={handleRejectSuggestion}
                               onMoveToLibrary={handleMoveToLibrary}
                               handleSaveNotes={handleSaveSuggestionNotes}
+                              onLinkClick={handleLinkClick}
                             />
                           ))}
                         </div>
@@ -780,6 +828,8 @@ export default function Home() {
                             onReject={handleRejectSuggestion}
                             onMoveToLibrary={handleMoveToLibrary}
                             handleSaveNotes={handleSaveSuggestionNotes}
+                            onLinkClick={handleLinkClick}
+                            onLike={handleLike}
                           />
                         ))}
                       </div>
