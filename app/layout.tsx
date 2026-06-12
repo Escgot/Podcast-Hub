@@ -1,24 +1,22 @@
 import type { Metadata } from "next";
-import { Inter, Cairo } from "next/font/google";
+import { Inter, Cairo } from "next/font/google"; // Pulling in your fonts
 import "./globals.css";
 
-// Configure the English font
+// 1. Initialize your fonts and define their CSS variables
 const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
+  variable: "--font-inter"
 });
 
-// Configure the Arabic font
 const cairo = Cairo({
-  subsets: ["arabic"],
-  variable: "--font-cairo",
-  display: "swap",
+  subsets: ["arabic", "latin"], // Add weights or subsets if needed
+  variable: "--font-cairo"
 });
 
+// 2. Set your browser tab title and site description here
 export const metadata: Metadata = {
-  title: "Curated Archive Hub",
-  description: "A premium dashboard for curated media.",
+  title: "Podcast Hub | Premium Media Library",
+  description: "Curate, organize, and share your favorite podcasts and media links.",
 };
 
 export default function RootLayout({
@@ -27,10 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // 3. Keep the font variables injected here so Tailwind 'font-sans' works!
     <html lang="en" className={`${inter.variable} ${cairo.variable}`}>
-      {/* By applying 'font-sans' here, Tailwind will use our custom stack 
-        defined in the tailwind.config.ts file 
-      */}
       <body className="font-sans bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500/30">
         {children}
       </body>
