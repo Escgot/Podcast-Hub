@@ -360,6 +360,46 @@ export default function Home() {
   useEffect(() => {
     fetchBookmarks();
     fetchSuggestions();
+
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookmarks' }, (payload) => {
+        setBookmarks((prev) => {
+          let next = [...prev];
+          if (payload.eventType === 'INSERT') {
+            if (!next.some(b => b.id === payload.new.id)) next = [payload.new, ...next];
+          } else if (payload.eventType === 'UPDATE') {
+            next = next.map(b => b.id === payload.new.id ? payload.new : b);
+          } else if (payload.eventType === 'DELETE') {
+            next = next.filter(b => b.id !== payload.old.id);
+          }
+          return next.sort((a, b) => {
+            if (a.sort_order === b.sort_order) return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            return (a.sort_order || 0) - (b.sort_order || 0);
+          });
+        });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'suggestions' }, (payload) => {
+        setSuggestions((prev) => {
+          let next = [...prev];
+          if (payload.eventType === 'INSERT') {
+            if (!next.some(s => s.id === payload.new.id)) next = [payload.new, ...next];
+          } else if (payload.eventType === 'UPDATE') {
+            next = next.map(s => s.id === payload.new.id ? payload.new : s);
+          } else if (payload.eventType === 'DELETE') {
+            next = next.filter(s => s.id !== payload.old.id);
+          }
+          return next.sort((a, b) => {
+            if (a.sort_order === b.sort_order) return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            return (a.sort_order || 0) - (b.sort_order || 0);
+          });
+        });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchBookmarks = async () => {
