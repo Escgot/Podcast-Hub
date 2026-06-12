@@ -3,17 +3,18 @@ import * as cheerio from 'cheerio';
 
 export async function POST(request: Request) {
     try {
-        // 1. Get the URL submitted by the user
         const { url } = await request.json();
 
         if (!url) {
             return NextResponse.json({ error: 'URL is required' }, { status: 400 });
         }
 
-        // 2. Fetch the HTML from the podcast page
+        // 1. Fetch with Anti-Bot Headers (Cookie bypasses the EU/Bot consent screen)
         const response = await fetch(url, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Cookie': 'CONSENT=YES+cb.20230101-17-p0.en+FX+478'
             },
         });
 
@@ -22,30 +23,27 @@ export async function POST(request: Request) {
         }
 
         const html = await response.text();
-
-        // 3. Load the HTML into cheerio to parse it
         const $ = cheerio.load(html);
 
-        // 4. Extract the Open Graph (og) tags
-        const episode_title = $('meta[property="og:title"]').attr('content') || $('title').text() || 'Unknown Title';
-        const description = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
-        const thumbnail_url = $('meta[property="og:image"]').attr('content') || '';
+        // 2. Extract standard tags
+        let episode_title = $('meta[property="og:title"]').attr('content') || $('title').text() || '';
+        let description = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
+        let thumbnail_url = $('meta[property="og:image"]').attr('content') || '';
 
-        const author =
+        let author =
             $('link[itemprop="name"]').attr('content') ||
             $('meta[name="author"]').attr('content') ||
             $('meta[property="og:site_name"]').attr('content') ||
             '';
 
-        // ---> NEW LOGIC: Extract Date and Views <---
-        const publish_date =
-            $('meta[itemprop="datePublished"]').attr('content') || // YouTube format
-            $('meta[property="article:published_time"]').attr('content') || // Article format
+        let publish_date =
+            $('meta[itemprop="datePublished"]').attr('content') ||
+            $('meta[property="article:published_time"]').attr('content') ||
             '';
 
         let view_count = $('meta[itemprop="interactionCount"]').attr('content') || '';
 
-        // ---> REGEX FALLBACK: Dig into YouTube's hidden scripts if the meta tag is missing <---
+        // YouTube specific hidden view count fallback
         if (!view_count && (url.includes("youtube.com") || url.includes("youtu.be"))) {
             const viewMatch = html.match(/"viewCount":"(\d+)"/);
             if (viewMatch && viewMatch[1]) {
@@ -53,7 +51,7 @@ export async function POST(request: Request) {
             }
         }
 
-        // 5. Detect the platform based on the URL (FIXED: This was missing!)
+        // 3. Platform Detection
         let platform = "Web";
         if (url.includes("youtube.com") || url.includes("youtu.be")) {
             platform = "YouTube";
@@ -63,21 +61,42 @@ export async function POST(request: Request) {
             platform = "Apple Podcasts";
         }
 
-        // 6. Send the clean data back to the frontend
+        // ---> 4. VERCEL ANTI-BOT FALLBACK <---
+        // If YouTube gave us a Captcha/Consent page, the title will be empty or say "Before you continue".
+        // We catch that here and use the official unblockable oEmbed API to rescue the data!
+        if (platform === "YouTube" && (!episode_title || episode_title.includes("Before you continue") || episode_title === "YouTube")) {
+            try {
+                const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+                const oembedRes = await fetch(oembedUrl);
+                if (oembedRes.ok) {
+                    const oembedData = await oembedRes.json();
+                    episode_title = oembedData.title;
+                    thumbnail_url = oembedData.thumbnail_url;
+                    author = oembedData.author_name;
+                    // Note: oEmbed guarantees title, thumbnail, and author, but does not provide views/dates.
+                }
+            } catch (fallbackError) {
+                console.error("oEmbed fallback failed", fallbackError);
+            }
+        }
+
+        // Final cleanup for totally unknown titles
+        if (!episode_title) episode_title = 'Unknown Title';
+
+        // 5. Send data back
         return NextResponse.json({
             url,
             episode_title,
             description,
             thumbnail_url,
-            platform,     // This now works!
+            platform,
             author,
-            publish_date, // New Date
-            view_count,   // New View Count
+            publish_date,
+            view_count,
         });
 
     } catch (error: any) {
         console.error('Failed to scrape URL:', error);
-        // This will now pass the real system error to your frontend alert
         return NextResponse.json({
             error: error?.message || 'Unknown server error'
         }, { status: 500 });

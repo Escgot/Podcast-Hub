@@ -38,8 +38,8 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
       ref={setNodeRef}
       style={style}
       className={`group relative flex transition-all duration-500 ${isList
-          ? "flex-col md:flex-row gap-8 p-3 rounded-[2rem] items-center"
-          : "flex-col rounded-[2rem] overflow-hidden"
+        ? "flex-col md:flex-row gap-8 p-3 rounded-[2rem] items-center"
+        : "flex-col rounded-[2rem] overflow-hidden"
         } ${isDragging
           ? "bg-zinc-800/80 border-zinc-500 shadow-2xl scale-[1.02] z-50 backdrop-blur-xl"
           : "bg-zinc-900/20 border border-white/5 hover:bg-zinc-900/50 hover:border-white/10 z-10"
@@ -179,8 +179,8 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
       ref={setNodeRef}
       style={style}
       className={`group relative flex transition-all duration-500 ${isList
-          ? "flex-col md:flex-row gap-8 p-3 rounded-[2rem] items-center"
-          : "flex-col rounded-[2rem] overflow-hidden"
+        ? "flex-col md:flex-row gap-8 p-3 rounded-[2rem] items-center"
+        : "flex-col rounded-[2rem] overflow-hidden"
         } ${isDragging
           ? "bg-zinc-800/80 border-zinc-500 shadow-2xl scale-[1.02] z-50 backdrop-blur-xl"
           : "bg-zinc-900/20 border border-white/5 hover:bg-zinc-900/50 hover:border-white/10 z-10"
@@ -347,7 +347,7 @@ export default function Home() {
   const handleAdminUnlock = () => {
     if (isAdmin) { setIsAdmin(false); return; }
     const passcode = window.prompt("Enter Admin Passcode:");
-    const correctPasscode = process.env.NEXT_PUBLIC_ADMIN_PASSCODE || "1234";
+    const correctPasscode = process.env.NEXT_PUBLIC_ADMIN_PASSCODE || "7412";
     if (passcode === correctPasscode) { setIsAdmin(true); }
     else if (passcode !== null) { alert("Incorrect passcode."); }
   };
