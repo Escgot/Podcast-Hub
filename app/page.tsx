@@ -13,10 +13,10 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 // --- SUB-COMPONENT: Ultra-Premium Library Card ---
-function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin, viewMode }: any) {
+function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin, viewMode, sortBy }: any) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: bookmark.id,
-    disabled: !isAdmin
+    disabled: !isAdmin || sortBy !== "default" // <--- Adds the Safety Lock
   });
   const [isEditing, setIsEditing] = useState(false);
   const [notes, setNotes] = useState(bookmark.notes || "");
@@ -158,12 +158,11 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
 }
 
 // --- SUB-COMPONENT: Ultra-Premium Sortable Suggestion Card ---
-function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onReject, onMoveToLibrary, handleSaveNotes }: any) {
+function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onReject, onMoveToLibrary, handleSaveNotes, sortBy }: any) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: suggestion.id,
-    disabled: !isAdmin
+    disabled: !isAdmin || sortBy !== "default" // <--- Adds the Safety Lock
   });
-
   const [isEditing, setIsEditing] = useState(false);
   const [notes, setNotes] = useState(suggestion.notes || "");
 
@@ -328,6 +327,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("library");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"default" | "views">("default");
 
   const [bookmarks, setBookmarks] = useState<any[]>([]);
   const [url, setUrl] = useState("");
@@ -362,6 +363,26 @@ export default function Home() {
     const correctPasscode = process.env.NEXT_PUBLIC_ADMIN_PASSCODE || "7412";
     if (passcode === correctPasscode) { setIsAdmin(true); }
     else if (passcode !== null) { alert("Incorrect passcode."); }
+  };
+
+  // Filter and Sort Processing Engine
+  const processItems = (items: any[]) => {
+    // 1. Search Query Filter (Matches Title or YouTube Channel Author)
+    let filtered = items.filter((item) => {
+      const matchesTitle = item.episode_title?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesAuthor = item.author?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesTitle || matchesAuthor;
+    });
+
+    // 2. Sorting Core
+    if (sortBy === "views") {
+      filtered = [...filtered].sort((a, b) => {
+        const viewsA = parseInt(a.view_count) || 0;
+        const viewsB = parseInt(b.view_count) || 0;
+        return viewsB - viewsA; // Highest view count floats to top
+      });
+    }
+    return filtered;
   };
 
   // --- LIBRARY FUNCTIONS ---
@@ -506,43 +527,86 @@ export default function Home() {
   };
 
   const renderLayoutToolbar = (title: string, count: number) => (
-    <div className="flex justify-between items-end border-b border-white/5 pb-6">
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/5 pb-6">
       <div className="space-y-1">
         <h2 className="text-2xl font-semibold tracking-tight text-white">{title}</h2>
-        <p className="text-sm text-zinc-500 font-medium">{count} Podcasts</p>
+        <p className="text-sm text-zinc-500 font-medium">{count} Podcasts matched</p>
       </div>
-      <div className="flex items-center gap-2">
-        <div className="flex bg-black p-1 rounded-full border border-white/5 relative">
-          {["list", "grid"].map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setViewMode(mode as "list" | "grid")}
-              className={`relative p-2.5 rounded-full transition-colors duration-300 z-10 ${viewMode === mode ? "text-white" : "text-zinc-600 hover:text-zinc-300"
-                }`}
-              title={`${mode} View`}
-            >
-              {viewMode === mode && (
-                <motion.div
-                  layoutId="activeView"
-                  className="absolute inset-0 bg-zinc-800 rounded-full -z-10"
-                  transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
-                />
-              )}
-              {mode === "list" ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-              )}
-            </button>
-          ))}
+
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        {/* PREMIUM GLASS SEARCH BAR */}
+        <div className="relative flex items-center">
+          <svg className="w-4 h-4 absolute left-3.5 text-zinc-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search titles or channels..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full sm:w-64 pl-10 pr-4 py-2 text-xs font-medium bg-black/40 border border-white/5 rounded-full text-white placeholder-zinc-500 focus:outline-none focus:border-white/20 focus:bg-black/60 transition-all duration-300"
+          />
+        </div>
+
+        <div className="flex items-center justify-between sm:justify-start gap-2">
+          {/* PREMIUM SORT PILL CONTROLLER */}
+          <div className="flex bg-black p-1 rounded-full border border-white/5 relative">
+            {[
+              { id: "default", label: "Default Sort" },
+              { id: "views", label: "Most Viewed" }
+            ].map((option) => (
+              <button
+                key={option.id}
+                onClick={() => setSortBy(option.id as "default" | "views")}
+                className={`relative px-3 py-1.5 text-xs font-medium rounded-full transition-colors duration-300 z-10 ${sortBy === option.id ? "text-white" : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+              >
+                {sortBy === option.id && (
+                  <motion.div
+                    layoutId="activeSort"
+                    className="absolute inset-0 bg-zinc-800 rounded-full -z-10"
+                    transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
+                  />
+                )}
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {/* GRID / LIST LAYOUT SWITCHER */}
+          <div className="flex bg-black p-1 rounded-full border border-white/5 relative">
+            {["list", "grid"].map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode as "list" | "grid")}
+                className={`relative p-2 rounded-full transition-colors duration-300 z-10 ${viewMode === mode ? "text-white" : "text-zinc-600 hover:text-zinc-300"
+                  }`}
+                title={`${mode} View`}
+              >
+                {viewMode === mode && (
+                  <motion.div
+                    layoutId="activeView"
+                    className="absolute inset-0 bg-zinc-800 rounded-full -z-10"
+                    transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
+                  />
+                )}
+                {mode === "list" ? (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
   );
 
   // Derived sorted arrays so our drag maps output perfectly
-  const unapprovedSuggestions = suggestions.filter(s => !s.is_approved).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-  const approvedSuggestions = suggestions.filter(s => s.is_approved).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  const displayedBookmarks = processItems(bookmarks);
+  const unapprovedSuggestions = processItems(suggestions.filter(s => !s.is_approved).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)));
+  const approvedSuggestions = processItems(suggestions.filter(s => s.is_approved).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)));
 
   return (
     <div className="min-h-screen bg-black text-zinc-100 antialiased selection:bg-white/30 pb-24">
@@ -600,18 +664,19 @@ export default function Home() {
             )}
 
             <div className="space-y-8">
-              {renderLayoutToolbar("My Library", bookmarks.length)}
+              {renderLayoutToolbar("My Library", displayedBookmarks.length)}
 
-              {bookmarks.length === 0 ? (
+              {displayedBookmarks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-32 border border-dashed border-white/10 rounded-[2rem]">
                   <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No records found</span>
                 </div>
               ) : (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={bookmarks} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
+                  {/* Make sure items uses displayedBookmarks */}
+                  <SortableContext items={displayedBookmarks} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
                     <motion.div layout className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
                       <AnimatePresence mode="popLayout">
-                        {bookmarks.map((bookmark) => (
+                        {displayedBookmarks.map((bookmark) => (
                           <SortableBookmarkItem
                             key={bookmark.id}
                             bookmark={bookmark}
@@ -619,6 +684,7 @@ export default function Home() {
                             handleSaveNotes={handleSaveNotes}
                             isAdmin={isAdmin}
                             viewMode={viewMode}
+                            sortBy={sortBy} // <--- Pass the prop down!
                           />
                         ))}
                       </AnimatePresence>
