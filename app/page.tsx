@@ -41,7 +41,7 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
-      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+      transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
       ref={setNodeRef}
       style={style}
       className={`group relative flex transition-all duration-500 ${isList
@@ -187,7 +187,7 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
-      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+      transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
       ref={setNodeRef}
       style={style}
       className={`group relative flex transition-all duration-500 ${isList
@@ -525,7 +525,7 @@ export default function Home() {
                 <motion.div
                   layoutId="activeView"
                   className="absolute inset-0 bg-zinc-800 rounded-full -z-10"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
                 />
               )}
               {mode === "list" ? (
@@ -565,7 +565,7 @@ export default function Home() {
                   <motion.div
                     layoutId="activeTab"
                     className="absolute inset-0 bg-white rounded-full -z-10"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
                   />
                 )}
                 <span className="capitalize">{tab}</span>
