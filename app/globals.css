@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  /* This tells Tailwind to use your custom Next.js fonts for all text */
+  --font-sans: var(--font-inter), var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+}
+
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
