@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 import {
@@ -12,7 +12,22 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-// --- SUB-COMPONENT: Ultra-Premium Library Card ---
+// --- HELPER STRINGS ---
+const GREETING = (() => {
+  const h = new Date().getHours();
+  if (h < 5) return 'Good Night';
+  if (h < 12) return 'Good Morning';
+  if (h < 17) return 'Good Afternoon';
+  return 'Good Evening';
+})();
+const DATE_STR = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+// --- SVG ICONS ---
+const PlusIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
+
+// ============================================================================
+// SUB-COMPONENT: Ultra-Premium Library Card (ORIGINAL DESIGN RESTORED)
+// ============================================================================
 function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin, viewMode, onLinkClick }: any) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: bookmark.id,
@@ -165,8 +180,10 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
   );
 }
 
-// --- SUB-COMPONENT: Ultra-Premium Sortable Suggestion Card ---
-function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onReject, onMoveToLibrary, handleSaveNotes, onLinkClick }: any) {
+// ============================================================================
+// SUB-COMPONENT: Ultra-Premium Sortable Suggestion Card (ORIGINAL DESIGN)
+// ============================================================================
+function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onMoveToPodcast, onMoveToQuran, onReject, handleSaveNotes, onLinkClick }: any) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: suggestion.id,
     disabled: !isAdmin
@@ -218,7 +235,6 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
 
         <div className="absolute inset-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)] rounded-[inherit] pointer-events-none" />
 
-        {/* Drag Handle */}
         {isAdmin && (
           <div className="absolute top-4 left-4">
             <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-2.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 text-zinc-400 hover:text-white transition-all">
@@ -231,14 +247,10 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
           </div>
         )}
 
-        {/* Grid Mode Inline Actions */}
         {isAdmin && !isList && (
           <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-out">
-            {!suggestion.is_approved ? (
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onApprove(suggestion.id)} className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-bold transition-colors hover:bg-zinc-200">Approve</motion.button>
-            ) : (
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToLibrary(suggestion)} className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-bold transition-colors hover:bg-zinc-200">Deploy</motion.button>
-            )}
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToPodcast(suggestion)} className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-bold transition-colors hover:bg-zinc-200">🎙️ To Podcast</motion.button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToQuran(suggestion)} className="px-5 py-2.5 rounded-full bg-emerald-500 text-white text-xs font-bold transition-colors hover:bg-emerald-600">📖 To Quran</motion.button>
             <button onClick={() => setIsEditing(!isEditing)} className="p-3 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
             </button>
@@ -294,7 +306,6 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
             </button>
 
-            {/* List Mode Icons (Edit / Delete) */}
             {isAdmin && isList && (
               <div className="flex gap-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 ease-out">
                 <button onClick={() => setIsEditing(!isEditing)} className="p-2.5 rounded-full bg-zinc-900 border border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all">
@@ -308,14 +319,13 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
           </div>
         </div>
 
-        {/* List Mode Actions (Approve) */}
-        {isAdmin && isList && !suggestion.is_approved && (
+        {isAdmin && isList && (
           <div className="mt-8 flex gap-3">
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onApprove(suggestion.id)} className="bg-white text-black hover:bg-zinc-200 px-6 py-2.5 rounded-full text-xs font-bold transition-colors">Approve Submission</motion.button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToPodcast(suggestion)} className="bg-white text-black hover:bg-zinc-200 px-6 py-2.5 rounded-full text-xs font-bold transition-colors">🎙️ To Podcast</motion.button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToQuran(suggestion)} className="bg-emerald-500 text-white hover:bg-emerald-600 px-6 py-2.5 rounded-full text-xs font-bold transition-colors">📖 To Quran</motion.button>
           </div>
         )}
 
-        {/* Notes Editor Block */}
         {isEditing && isAdmin ? (
           <div className="mt-6 flex flex-col gap-4 w-full">
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add minimalist insights..." className="w-full p-5 text-sm bg-black border border-white/10 rounded-[1.5rem] focus:border-white/30 text-zinc-200 outline-none resize-none transition-all placeholder:text-zinc-600" rows={3} />
@@ -335,26 +345,259 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
   );
 }
 
-// --- MAIN PORTAL COMPONENT ---
+// ============================================================================
+// HERO CARDS for Home Screen
+// ============================================================================
+const HeroCard = ({ item, title, accent }: { item: any, title: string, accent: string }) => {
+  if (!item) return null;
+  return (
+    <motion.div whileHover={{ y: -3, scale: 1.01 }} transition={{ duration: 0.3 }} className="group relative rounded-[2rem] overflow-hidden border border-white/5 cursor-pointer" onClick={() => window.open(item.url, "_blank")}>
+      <div className="relative aspect-video bg-black">
+        {item.thumbnail_url ? (
+          <img src={item.thumbnail_url} alt="Cover" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" />
+        ) : (
+          <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
+            <span className="text-zinc-600 tracking-widest uppercase text-xs">No Artwork</span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute inset-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+          <div className={`text-[10px] font-bold tracking-[0.15em] uppercase mb-2 ${accent}`}>
+            {title}
+          </div>
+          <h3 className="text-lg sm:text-xl font-semibold text-white leading-snug line-clamp-2 mb-1">{item.episode_title}</h3>
+          <p className="text-xs text-zinc-400">{item.podcast_name || item.platform}</p>
+        </div>
+        <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
+          <svg width="14" height="15" viewBox="0 0 12 13" fill="white" className="ml-0.5"><path d="M1 1l10 5.5L1 12V1z" /></svg>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// ============================================================================
+// ADD SHEET (MODAL)
+// ============================================================================
+const AddSheet = ({ onClose, onIngest }: any) => {
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [type, setType] = useState('podcast');
+
+  const handleSave = async () => {
+    if (!url.trim()) { toast.error("Paste a URL first!"); return; }
+    setLoading(true);
+    await onIngest(url, 'suggestion');
+    setLoading(false);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex flex-col justify-end sm:justify-center items-center p-4" onClick={onClose}>
+      <motion.div
+        initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }} transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+        onClick={e => e.stopPropagation()}
+        className="bg-zinc-950 rounded-[2rem] p-6 sm:p-8 border border-white/5 w-full max-w-md shadow-2xl"
+      >
+        <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mb-6 sm:hidden" />
+        <h2 className="text-2xl font-bold text-zinc-100 mb-6">Save Link</h2>
+
+        <div className="relative mb-5">
+          <input
+            value={url}
+            onChange={e => setUrl(e.target.value)}
+            placeholder="Paste a YouTube or media URL..."
+            autoFocus
+            className="w-full p-4 bg-black/40 border border-white/10 rounded-full text-sm text-zinc-100 outline-none focus:border-white/30 transition-colors placeholder:text-zinc-600"
+          />
+        </div>
+
+
+
+        <motion.button
+          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}
+          onClick={handleSave} disabled={loading}
+          className="w-full p-4 rounded-full border-none cursor-pointer text-sm font-bold text-black bg-white hover:bg-zinc-200 transition-colors disabled:opacity-50"
+        >
+          {loading ? 'Processing...' : 'Save to Library'}
+        </motion.button>
+      </motion.div>
+    </div>
+  );
+};
+
+// ============================================================================
+// RESPONSIVE NAVIGATION
+// ============================================================================
+const Navigation = ({ tab, setTab, onAdd, isAdmin }: any) => {
+  const items = [
+    { k: 'home', l: 'Home', i: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
+    { k: 'podcasts', l: 'Podcasts', i: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> },
+    { k: 'quran', l: 'Quran', i: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg> },
+  ];
+  if (isAdmin) items.push({ k: 'admin', l: 'Admin', i: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg> });
+
+  return (
+    <>
+      {/* MOBILE BOTTOM NAV */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-zinc-950/80 backdrop-blur-xl border-t border-white/5 flex justify-around items-center pt-2 pb-6 z-50 px-2">
+        {items.map(({ k, l, i }, idx) => (
+          <div key={k} className="flex items-center">
+            {idx === 1 && (
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={onAdd}
+                className="w-12 h-12 rounded-full bg-white text-black border-none flex items-center justify-center shadow-lg shadow-white/10 mx-4"
+              >
+                <PlusIcon />
+              </motion.button>
+            )}
+            <button
+              onClick={() => setTab(k)}
+              className={`flex flex-col items-center gap-1 px-4 py-2 transition-colors ${tab === k ? 'text-white' : 'text-zinc-500'}`}
+            >
+              {i}
+              <span className={`text-[10px] ${tab === k ? 'font-bold' : 'font-medium'}`}>{l}</span>
+            </button>
+          </div>
+        ))}
+      </nav>
+
+      {/* DESKTOP TOP ISLAND NAV */}
+      <div className="hidden sm:flex fixed top-6 left-0 right-0 z-50 justify-center px-6 pointer-events-none">
+        <nav className="bg-zinc-900/60 backdrop-blur-2xl border border-white/5 rounded-full px-6 py-3 flex items-center gap-0 shadow-2xl pointer-events-auto">
+          <h1 onClick={() => setTab('home')} className="text-sm font-bold tracking-wide text-white cursor-pointer select-none flex items-center gap-3 hover:opacity-70 transition-opacity mr-6">
+            🎧 Podcast Hub {isAdmin && <span className="text-[9px] border border-white/20 text-zinc-300 px-2 py-0.5 rounded-full uppercase tracking-widest">Admin</span>}
+          </h1>
+          <div className="flex gap-1 bg-black/50 p-1 rounded-full border border-white/5 relative">
+            {items.map(({ k, l }) => (
+              <button
+                key={k}
+                onClick={() => setTab(k)}
+                className={`relative px-5 py-2 text-xs font-medium rounded-full transition-colors duration-300 z-10 ${tab === k ? "text-black" : "text-zinc-400 hover:text-white"}`}
+              >
+                {tab === k && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 bg-white rounded-full -z-10"
+                    transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
+                  />
+                )}
+                <span className="capitalize">{l}</span>
+              </button>
+            ))}
+          </div>
+          <div className="w-px h-6 bg-zinc-800 mx-4" />
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onAdd}
+            className="flex items-center gap-2 bg-white text-black px-5 py-2 rounded-full text-xs font-bold transition-colors hover:bg-zinc-200"
+          >
+            <PlusIcon /> Add
+          </motion.button>
+        </nav>
+      </div>
+    </>
+  );
+};
+
+// ============================================================================
+// LAYOUT TOOLBAR (search + sort + view toggle)
+// ============================================================================
+const LayoutToolbar = ({ title, count, searchQuery, setSearchQuery, sortBy, setSortBy, viewMode, setViewMode, isAdmin }: any) => (
+  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/5 pb-6">
+    <div className="space-y-1">
+      <h2 className="text-2xl font-semibold tracking-tight text-white">{title}</h2>
+      <p className="text-sm text-zinc-500 font-medium">{count} items matched</p>
+    </div>
+
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="relative flex items-center">
+        <svg className="w-4 h-4 absolute left-3.5 text-zinc-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Search titles or channels..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full sm:w-64 pl-10 pr-4 py-2 text-xs font-medium bg-black/40 border border-white/5 rounded-full text-white placeholder-zinc-500 focus:outline-none focus:border-white/20 focus:bg-black/60 transition-all duration-300"
+        />
+      </div>
+
+      <div className="flex items-center justify-between sm:justify-start gap-2">
+        <div className="flex bg-black p-1 rounded-full border border-white/5 relative">
+          {[
+            { id: "default", label: "Default Sort" },
+            { id: "views", label: "Most Viewed" },
+            ...(isAdmin ? [{ id: "clicked", label: "Most Clicked" }] : [])
+          ].map((option) => (
+            <button
+              key={option.id}
+              onClick={() => setSortBy(option.id)}
+              className={`relative px-3 py-1.5 text-xs font-medium rounded-full transition-colors duration-300 z-10 ${sortBy === option.id ? "text-white" : "text-zinc-500 hover:text-zinc-300"
+                }`}
+            >
+              {sortBy === option.id && (
+                <motion.div
+                  layoutId="activeSort"
+                  className="absolute inset-0 bg-zinc-800 rounded-full -z-10"
+                  transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
+                />
+              )}
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex bg-black p-1 rounded-full border border-white/5 relative">
+          {["list", "grid"].map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              className={`relative p-2 rounded-full transition-colors duration-300 z-10 ${viewMode === mode ? "text-white" : "text-zinc-600 hover:text-zinc-300"}`}
+              title={`${mode} View`}
+            >
+              {viewMode === mode && (
+                <motion.div
+                  layoutId="activeView"
+                  className="absolute inset-0 bg-zinc-800 rounded-full -z-10"
+                  transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
+                />
+              )}
+              {mode === "list" ? (
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+              ) : (
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+
+// ============================================================================
+// MAIN APP COMPONENT
+// ============================================================================
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("library");
+  const [tab, setTab] = useState("home");
+  const [showAdd, setShowAdd] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"default" | "views" | "clicked">("default");
 
   const [bookmarks, setBookmarks] = useState<any[]>([]);
-  const [url, setUrl] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [preview, setPreview] = useState<any>(null);
-
   const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [suggestionUrl, setSuggestionUrl] = useState("");
-  const [suggestionLoading, setSuggestionLoading] = useState(false);
-
   const [qurans, setQurans] = useState<any[]>([]);
-  const [quranUrl, setQuranUrl] = useState("");
-  const [quranLoading, setQuranLoading] = useState(false);
+
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [adminPasscode, setAdminPasscode] = useState("");
 
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
@@ -415,50 +658,43 @@ export default function Home() {
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const fetchBookmarks = async () => {
     const { data } = await supabase.from("bookmarks").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
     if (data) setBookmarks(data);
   };
-
   const fetchSuggestions = async () => {
     const { data } = await supabase.from("suggestions").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
     if (data) setSuggestions(data);
   };
-
   const fetchQurans = async () => {
     const { data } = await supabase.from("quran").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
     if (data) setQurans(data);
   };
 
-  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-  const [adminPasscode, setAdminPasscode] = useState("");
-
   const handleAdminUnlock = () => {
-    if (isAdmin) { setIsAdmin(false); toast("Admin mode locked", { icon: "🔒" }); return; }
+    if (isAdmin) { setIsAdmin(false); toast("Admin mode locked", { icon: "🔒" }); setTab('home'); return; }
     setIsAdminModalOpen(true);
   };
 
   const submitAdminPasscode = (e: React.FormEvent) => {
     e.preventDefault();
     const correctPasscode = process.env.NEXT_PUBLIC_ADMIN_PASSCODE || "7412";
-    if (adminPasscode === correctPasscode) { 
-      setIsAdmin(true); 
-      setIsAdminModalOpen(false); 
+    if (adminPasscode === correctPasscode) {
+      setIsAdmin(true);
+      setIsAdminModalOpen(false);
       setAdminPasscode("");
       toast.success("Admin unlocked");
-    }
-    else { 
-      toast.error("Incorrect passcode."); 
+      setTab('admin');
+    } else {
+      toast.error("Incorrect passcode.");
       setAdminPasscode("");
     }
   };
 
-  // Filter and Sort Processing Engine (FIXED: Targeted podcast_name & platform correctly)
+  // Filter and Sort Processing Engine
   const processItems = (items: any[]) => {
     let filtered = items.filter((item) => {
       const query = searchQuery.toLowerCase();
@@ -491,10 +727,15 @@ export default function Home() {
 
     const newClicks = (item.hub_clicks || 0) + 1;
     let table = "bookmarks";
-    if (activeTab === "suggestions") table = "suggestions";
-    if (activeTab === "quran") table = "quran";
+    if (tab === "admin") {
+      // Determine table from context
+      if (suggestions.some(s => s.id === item.id)) table = "suggestions";
+      else if (qurans.some(q => q.id === item.id)) table = "quran";
+    }
+    if (tab === "quran") {
+      table = "quran";
+    }
 
-    // Update state optimistically
     if (table === "suggestions") {
       setSuggestions(prev => prev.map(s => s.id === item.id ? { ...s, hub_clicks: newClicks } : s));
     } else if (table === "quran") {
@@ -503,50 +744,10 @@ export default function Home() {
       setBookmarks(prev => prev.map(b => b.id === item.id ? { ...b, hub_clicks: newClicks } : b));
     }
 
-    // Update database
     await supabase.from(table).update({ hub_clicks: newClicks }).eq("id", item.id);
   };
 
   // --- LIBRARY FUNCTIONS ---
-  const handleScrape = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!url.trim()) return toast.error("Please paste a URL first!");
-    setLoading(true); setPreview(null);
-    try {
-      const res = await fetch("/api/scrape", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: url.trim() }) });
-      const data = await res.json();
-      if (res.ok) setPreview(data);
-      else toast.error("Scraper Error: " + (data.error || "Could not parse the link."));
-    } catch (err) { toast.error("Network Error"); } finally { setLoading(false); }
-  };
-
-  const handleSave = async () => {
-    if (!preview) return;
-
-    // FIX: Target top placement by subtracting 1 from the minimum sort order
-    const minSortOrder = bookmarks.length > 0 ? Math.min(...bookmarks.map(b => b.sort_order ?? 0)) : 0;
-
-    const { data, error } = await supabase.from("bookmarks").insert([{
-      url: preview.url,
-      podcast_name: preview.author || preview.platform,
-      episode_title: preview.episode_title,
-      platform: preview.platform,
-      description: preview.description,
-      thumbnail_url: preview.thumbnail_url,
-      publish_date: preview.publish_date,
-      view_count: preview.view_count,
-      hub_clicks: 0,
-      sort_order: minSortOrder - 1
-    }]).select();
-
-    if (error) { toast.error("Database Error: " + error.message); return; }
-    if (data) {
-      setBookmarks([data[0], ...bookmarks]); // Prepend locally
-      setPreview(null);
-      setUrl("");
-    }
-  };
-
   const handleDelete = async (id: string) => {
     await supabase.from("bookmarks").delete().eq("id", id);
     setBookmarks(bookmarks.filter((b) => b.id !== id));
@@ -571,39 +772,6 @@ export default function Home() {
   };
 
   // --- SUGGESTION FUNCTIONS ---
-  const handleSubmitSuggestion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSuggestionLoading(true);
-    try {
-      const res = await fetch("/api/scrape", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: suggestionUrl }) });
-      const previewData = await res.json();
-      if (res.ok) {
-        // FIX: Target top placement by subtracting 1 from the minimum sort order
-        const minSortOrder = suggestions.length > 0 ? Math.min(...suggestions.map(s => s.sort_order ?? 0)) : 0;
-
-        const { data, error } = await supabase.from("suggestions").insert([{
-          url: previewData.url,
-          podcast_name: previewData.author || previewData.platform,
-          episode_title: previewData.episode_title,
-          platform: previewData.platform,
-          description: previewData.description,
-          thumbnail_url: previewData.thumbnail_url,
-          publish_date: previewData.publish_date,
-          view_count: previewData.view_count,
-          hub_clicks: 0,
-          sort_order: minSortOrder - 1,
-          is_approved: false
-        }]).select();
-        if (error) { toast.error("Database Error: " + error.message); }
-        else if (data) {
-          setSuggestions([data[0], ...suggestions]); // Prepend locally
-          setSuggestionUrl("");
-          toast.success("Suggestion submitted for review.");
-        }
-      } else { toast.error("Could not pull data."); }
-    } catch (err) { console.error("Scrape failed", err); } finally { setSuggestionLoading(false); }
-  };
-
   const handleApproveSuggestion = async (id: string) => {
     await supabase.from("suggestions").update({ is_approved: true }).eq("id", id);
     setSuggestions(suggestions.map(s => s.id === id ? { ...s, is_approved: true } : s));
@@ -619,10 +787,8 @@ export default function Home() {
     setSuggestions(suggestions.map(s => s.id === id ? { ...s, notes } : s));
   };
 
-  const handleMoveToLibrary = async (suggestion: any) => {
-    // FIX: Target top placement by subtracting 1 from the minimum sort order
+  const handleMoveToPodcast = async (suggestion: any) => {
     const minSortOrder = bookmarks.length > 0 ? Math.min(...bookmarks.map(b => b.sort_order ?? 0)) : 0;
-
     const { data } = await supabase.from("bookmarks").insert([{
       url: suggestion.url,
       podcast_name: suggestion.podcast_name,
@@ -637,71 +803,54 @@ export default function Home() {
     }]).select();
 
     if (data) {
-      setBookmarks([data[0], ...bookmarks]); // Prepend locally
+      setBookmarks([data[0], ...bookmarks]);
       handleRejectSuggestion(suggestion.id);
     }
   };
 
-  // Safe dual-list Drag n' Drop handler
+  const handleMoveToQuran = async (suggestion: any) => {
+    const minSortOrder = qurans.length > 0 ? Math.min(...qurans.map(q => q.sort_order ?? 0)) : 0;
+    const { data } = await supabase.from("quran").insert([{
+      url: suggestion.url,
+      podcast_name: suggestion.podcast_name,
+      episode_title: suggestion.episode_title,
+      platform: suggestion.platform,
+      description: suggestion.description,
+      thumbnail_url: suggestion.thumbnail_url,
+      publish_date: suggestion.publish_date,
+      view_count: suggestion.view_count,
+      hub_clicks: suggestion.hub_clicks || 0,
+      sort_order: minSortOrder - 1,
+      is_approved: true
+    }]).select();
+
+    if (data) {
+      setQurans([data[0], ...qurans]);
+      handleRejectSuggestion(suggestion.id);
+    }
+  };
+
   const handleSuggestionDragEnd = (event: any, listType: "approved" | "unapproved") => {
     const { active, over } = event;
     if (active && over && active.id !== over.id && isAdmin) {
       setSuggestions((allItems) => {
         const isAppr = listType === "approved";
-
         const targetList = allItems.filter(s => s.is_approved === isAppr);
         const otherList = allItems.filter(s => s.is_approved !== isAppr);
-
         const oldIndex = targetList.findIndex(item => item.id === active.id);
         const newIndex = targetList.findIndex(item => item.id === over.id);
-
         if (oldIndex === -1 || newIndex === -1) return allItems;
-
         const reorderedList = arrayMove(targetList, oldIndex, newIndex);
-
-        // FIX: Update sort_order locally AND in database so inline layout sorting respects the changes
         const updatedReorderedList = reorderedList.map((item, index) => {
           supabase.from("suggestions").update({ sort_order: index }).eq("id", item.id).then();
           return { ...item, sort_order: index };
         });
-
         return [...updatedReorderedList, ...otherList];
       });
     }
   };
 
   // --- QURAN FUNCTIONS ---
-  const handleSubmitQuran = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setQuranLoading(true);
-    try {
-      const res = await fetch("/api/scrape", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: quranUrl }) });
-      const previewData = await res.json();
-      if (res.ok) {
-        const minSortOrder = qurans.length > 0 ? Math.min(...qurans.map(q => q.sort_order ?? 0)) : 0;
-        const { data, error } = await supabase.from("quran").insert([{
-          url: previewData.url,
-          podcast_name: previewData.author || previewData.platform,
-          episode_title: previewData.episode_title,
-          platform: previewData.platform,
-          description: previewData.description,
-          thumbnail_url: previewData.thumbnail_url,
-          publish_date: previewData.publish_date,
-          view_count: previewData.view_count,
-          hub_clicks: 0,
-          sort_order: minSortOrder - 1,
-          is_approved: false
-        }]).select();
-        if (error) { toast.error("Database Error: " + error.message); }
-        else if (data) {
-          setQurans([data[0], ...qurans]); // Prepend locally
-          setQuranUrl("");
-          toast.success("Quran link submitted for review.");
-        }
-      } else { toast.error("Could not pull data."); }
-    } catch (err) { console.error("Scrape failed", err); } finally { setQuranLoading(false); }
-  };
-
   const handleApproveQuran = async (id: string) => {
     await supabase.from("quran").update({ is_approved: true }).eq("id", id);
     setQurans(qurans.map(q => q.id === id ? { ...q, is_approved: true } : q));
@@ -717,27 +866,6 @@ export default function Home() {
     setQurans(qurans.map(q => q.id === id ? { ...q, notes } : q));
   };
 
-  const handleMoveQuranToLibrary = async (quranItem: any) => {
-    const minSortOrder = bookmarks.length > 0 ? Math.min(...bookmarks.map(b => b.sort_order ?? 0)) : 0;
-    const { data } = await supabase.from("bookmarks").insert([{
-      url: quranItem.url,
-      podcast_name: quranItem.podcast_name,
-      episode_title: quranItem.episode_title,
-      platform: quranItem.platform,
-      description: quranItem.description,
-      thumbnail_url: quranItem.thumbnail_url,
-      publish_date: quranItem.publish_date,
-      view_count: quranItem.view_count,
-      hub_clicks: quranItem.hub_clicks || 0,
-      sort_order: minSortOrder - 1
-    }]).select();
-
-    if (data) {
-      setBookmarks([data[0], ...bookmarks]); // Prepend locally
-      handleRejectQuran(quranItem.id);
-    }
-  };
-
   const handleQuranDragEnd = (event: any, listType: "approved" | "unapproved") => {
     const { active, over } = event;
     if (active && over && active.id !== over.id && isAdmin) {
@@ -745,100 +873,56 @@ export default function Home() {
         const isAppr = listType === "approved";
         const targetList = allItems.filter(q => q.is_approved === isAppr);
         const otherList = allItems.filter(q => q.is_approved !== isAppr);
-
         const oldIndex = targetList.findIndex(item => item.id === active.id);
         const newIndex = targetList.findIndex(item => item.id === over.id);
-
         if (oldIndex === -1 || newIndex === -1) return allItems;
-
         const reorderedList = arrayMove(targetList, oldIndex, newIndex);
-
         const updatedReorderedList = reorderedList.map((item, index) => {
           supabase.from("quran").update({ sort_order: index }).eq("id", item.id).then();
           return { ...item, sort_order: index };
         });
-
         return [...updatedReorderedList, ...otherList];
       });
     }
   };
 
-  const renderLayoutToolbar = (title: string, count: number) => (
-    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/5 pb-6">
-      <div className="space-y-1">
-        <h2 className="text-2xl font-semibold tracking-tight text-white">{title}</h2>
-        <p className="text-sm text-zinc-500 font-medium">{count} Podcasts matched</p>
-      </div>
+  // --- INGEST HANDLER (AddSheet) ---
+  const handleIngest = async (url: string, type: string) => {
+    try {
+      const res = await fetch("/api/scrape", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }) });
+      const preview = await res.json();
+      if (!res.ok) throw new Error(preview.error || "Scrape failed");
 
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div className="relative flex items-center">
-          <svg className="w-4 h-4 absolute left-3.5 text-zinc-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search titles or channels..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:w-64 pl-10 pr-4 py-2 text-xs font-medium bg-black/40 border border-white/5 rounded-full text-white placeholder-zinc-500 focus:outline-none focus:border-white/20 focus:bg-black/60 transition-all duration-300"
-          />
-        </div>
+      const table = type === 'podcast' ? 'bookmarks' : (type === 'quran' ? 'quran' : 'suggestions');
+      const stateArr = type === 'podcast' ? bookmarks : (type === 'quran' ? qurans : suggestions);
+      const minSortOrder = stateArr.length > 0 ? Math.min(...stateArr.map(b => b.sort_order ?? 0)) : 0;
 
-        <div className="flex items-center justify-between sm:justify-start gap-2">
-          <div className="flex bg-black p-1 rounded-full border border-white/5 relative">
-            {[
-              { id: "default", label: "Default Sort" },
-              { id: "views", label: "Most Viewed" },
-              ...(isAdmin ? [{ id: "clicked", label: "Most Clicked" }] : [])
-            ].map((option) => (
-              <button
-                key={option.id}
-                onClick={() => setSortBy(option.id as "default" | "views")}
-                className={`relative px-3 py-1.5 text-xs font-medium rounded-full transition-colors duration-300 z-10 ${sortBy === option.id ? "text-white" : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-              >
-                {sortBy === option.id && (
-                  <motion.div
-                    layoutId="activeSort"
-                    className="absolute inset-0 bg-zinc-800 rounded-full -z-10"
-                    transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
-                  />
-                )}
-                {option.label}
-              </button>
-            ))}
-          </div>
+      const payload: any = {
+        url: preview.url,
+        podcast_name: preview.author || preview.platform,
+        episode_title: preview.episode_title,
+        platform: preview.platform,
+        description: preview.description,
+        thumbnail_url: preview.thumbnail_url,
+        publish_date: preview.publish_date,
+        view_count: preview.view_count,
+        hub_clicks: 0,
+        sort_order: minSortOrder - 1
+      };
 
-          <div className="flex bg-black p-1 rounded-full border border-white/5 relative">
-            {["list", "grid"].map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode as "list" | "grid")}
-                className={`relative p-2 rounded-full transition-colors duration-300 z-10 ${viewMode === mode ? "text-white" : "text-zinc-600 hover:text-zinc-300"
-                  }`}
-                title={`${mode} View`}
-              >
-                {viewMode === mode && (
-                  <motion.div
-                    layoutId="activeView"
-                    className="absolute inset-0 bg-zinc-800 rounded-full -z-10"
-                    transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
-                  />
-                )}
-                {mode === "list" ? (
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-                ) : (
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+      if (type !== 'podcast') payload.is_approved = false;
 
-  // Derived filtered/sorted arrays to perfectly handle searches and layout arrangements
+      const { error } = await supabase.from(table).insert([payload]);
+      if (error) throw error;
+      toast.success("Saved successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to process");
+    }
+  };
+
+  // Derived filtered/sorted arrays
+  const filteredBookmarks = processItems(bookmarks);
+
   const unapprovedSuggestions = sortBy !== "default"
     ? processItems(suggestions.filter(s => !s.is_approved))
     : processItems(suggestions.filter(s => !s.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
@@ -855,293 +939,220 @@ export default function Home() {
     ? processItems(qurans.filter(q => q.is_approved))
     : processItems(qurans.filter(q => q.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
-  const filteredBookmarks = processItems(bookmarks);
+  // Home screen items
+  const latestPodcast = [...bookmarks].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+  const randomQuran = useMemo(() => {
+    const approved = qurans.filter(q => q.is_approved);
+    if (approved.length === 0) return null;
+    return approved[Math.floor(Math.random() * approved.length)];
+  }, [qurans]);
+
+  // Combined library items
+  const allLibraryItems = [
+    ...filteredBookmarks,
+    ...(sortBy !== "default" ? processItems(qurans.filter(q => q.is_approved)) : processItems(qurans.filter(q => q.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)))
+  ];
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 antialiased selection:bg-white/30 pb-24">
-      {/* Premium Floating Navigation Island */}
-      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-6 pointer-events-none">
-        <nav className="bg-zinc-900/60 backdrop-blur-2xl border border-white/5 rounded-[2rem] sm:rounded-full px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 w-full max-w-3xl shadow-2xl pointer-events-auto">
-          <h1 onClick={handleAdminUnlock} className="text-sm font-bold tracking-wide text-white cursor-pointer select-none flex items-center gap-3 hover:opacity-70 transition-opacity w-full sm:w-auto justify-center sm:justify-start">
-            🎧 Podcast Hub {isAdmin && <span className="text-[9px] border border-white/20 text-zinc-300 px-2 py-0.5 rounded-full uppercase tracking-widest">Admin</span>}
-          </h1>
-          <div className="flex w-full sm:w-auto overflow-x-auto" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-            <div className="flex mx-auto sm:mx-0 gap-1 bg-black/50 p-1 rounded-full border border-white/5 relative flex-shrink-0">
-              {["library", "suggestions", "quran"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`relative px-5 py-2 text-xs font-medium rounded-full transition-colors duration-300 z-10 ${activeTab === tab ? "text-black" : "text-zinc-400 hover:text-white"
-                    }`}
-                >
-                  {activeTab === tab && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-white rounded-full -z-10"
-                      transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
-                    />
-                  )}
-                  <span className="capitalize">{tab}</span>
-                </button>
-              ))}
+    <div className="min-h-screen bg-black text-zinc-100 antialiased selection:bg-white/30 pb-24 sm:pb-8">
+      <Navigation tab={tab} setTab={setTab} onAdd={() => setShowAdd(true)} isAdmin={isAdmin} />
+
+      {/* Admin Passcode Modal */}
+      <AnimatePresence>
+        {isAdminModalOpen && (
+          <div className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsAdminModalOpen(false)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-zinc-950 border border-white/10 rounded-[2rem] p-8 w-full max-w-sm shadow-2xl"
+            >
+              <h2 className="text-xl font-bold text-white mb-6 text-center">Admin Access</h2>
+              <form onSubmit={submitAdminPasscode} className="space-y-4">
+                <input
+                  type="password"
+                  value={adminPasscode}
+                  onChange={(e) => setAdminPasscode(e.target.value)}
+                  placeholder="Enter passcode..."
+                  autoFocus
+                  className="w-full px-6 py-4 text-sm bg-black border border-white/10 rounded-full focus:border-white/30 text-white placeholder-zinc-600 focus:outline-none transition-all text-center tracking-[0.3em]"
+                />
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }} type="submit" className="w-full bg-white text-black py-3.5 rounded-full font-bold text-sm transition-colors hover:bg-zinc-200">
+                  Unlock
+                </motion.button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <main className="max-w-5xl mx-auto px-6 space-y-16 pt-8 sm:pt-36">
+
+        {/* ==================== HOME TAB ==================== */}
+        {tab === "home" && (
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div>
+              <div className="text-xs font-medium text-zinc-500 mb-1 tracking-wider uppercase">{DATE_STR}</div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-zinc-100 cursor-pointer" onClick={handleAdminUnlock}>
+                {GREETING}, <span className="text-indigo-400">Mohamed</span>
+              </h1>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <HeroCard item={latestPodcast} title="Continue Listening" accent="text-indigo-400" />
+              <HeroCard item={randomQuran} title="Daily Reflection" accent="text-emerald-400" />
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex justify-between items-baseline">
+                <h2 className="text-xl font-bold text-zinc-100">Recently Saved</h2>
+                <button onClick={() => setTab('podcasts')} className="text-xs font-semibold text-zinc-400 hover:text-white transition-colors">View all →</button>
+              </div>
+              <div className="grid grid-cols-1 gap-6">
+                {[...bookmarks, ...qurans.filter(q => q.is_approved)].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 3).map((item) => (
+                  <SortableBookmarkItem
+                    key={item.id}
+                    bookmark={item}
+                    handleDelete={handleDelete}
+                    handleSaveNotes={handleSaveNotes}
+                    isAdmin={false}
+                    viewMode="list"
+                    onLinkClick={handleLinkClick}
+                  />
+                ))}
+              </div>
             </div>
           </div>
-        </nav>
-      </div>
+        )}
 
-      <main className="max-w-5xl mx-auto px-6 space-y-16 pt-36">
-        {activeTab === "library" && (
-          <>
-            {isAdmin && (
-              <div className="bg-zinc-900/30 border border-white/5 p-8 rounded-[2rem] shadow-2xl">
-                <form onSubmit={handleScrape} className="flex gap-4">
-                  <input type="url" required placeholder="Paste media URL to parse..." value={url} onChange={(e) => setUrl(e.target.value)} className="flex-1 px-6 py-4 text-sm bg-black border border-white/10 rounded-full focus:border-white/30 text-white placeholder-zinc-600 focus:outline-none transition-all" />
-                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" disabled={loading} className="bg-white text-black px-8 py-4 rounded-full font-bold text-sm disabled:opacity-50 transition-colors flex-shrink-0">
-                    {loading ? "Parsing..." : "Ingest"}
-                  </motion.button>
-                </form>
+        {/* ==================== PODCASTS TAB ==================== */}
+        {tab === "podcasts" && (
+          <div className="space-y-8">
+            <LayoutToolbar
+              title="Your Podcasts"
+              count={filteredBookmarks.length}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              isAdmin={isAdmin}
+            />
 
-                {preview && (
-                  <div className="mt-6 p-4 border border-white/10 bg-black rounded-[1.5rem] flex items-center justify-between gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <div className="flex items-center gap-4 min-w-0">
-                      {preview.thumbnail_url && <img src={preview.thumbnail_url} alt="Cover" className="w-12 h-12 object-cover rounded-full border border-white/10" />}
-                      <h3 className="font-semibold text-sm text-white line-clamp-1">{preview.episode_title}</h3>
-                    </div>
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleSave} className="bg-white text-black px-6 py-2.5 rounded-full text-xs font-bold hover:bg-zinc-200 transition-colors whitespace-nowrap">Commit</motion.button>
-                  </div>
-                )}
+            {filteredBookmarks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-32 border border-dashed border-white/10 rounded-[2rem]">
+                <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No podcasts found</span>
               </div>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={filteredBookmarks} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
+                  <motion.div layout className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
+                    <AnimatePresence mode="popLayout">
+                      {filteredBookmarks.map((bookmark) => (
+                        <SortableBookmarkItem
+                          key={bookmark.id}
+                          bookmark={bookmark}
+                          handleDelete={handleDelete}
+                          handleSaveNotes={handleSaveNotes}
+                          isAdmin={isAdmin}
+                          viewMode={viewMode}
+                          onLinkClick={handleLinkClick}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
+                </SortableContext>
+              </DndContext>
             )}
+          </div>
+        )}
 
+        {/* ==================== QURAN TAB ==================== */}
+        {tab === "quran" && (
+          <div className="space-y-8">
+            <LayoutToolbar
+              title="Your Quran Library"
+              count={approvedQurans.length}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              isAdmin={isAdmin}
+            />
+
+            {approvedQurans.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-32 border border-dashed border-white/10 rounded-[2rem]">
+                <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No Quran videos found</span>
+              </div>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleQuranDragEnd(e, "approved")}>
+                <SortableContext items={approvedQurans} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
+                  <motion.div layout className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
+                    <AnimatePresence mode="popLayout">
+                      {approvedQurans.map((q) => (
+                        <SortableSuggestionItem
+                          key={q.id}
+                          suggestion={q}
+                          isAdmin={isAdmin}
+                          viewMode={viewMode}
+                          onApprove={handleApproveQuran}
+                          onReject={handleRejectQuran}
+                          onMoveToLibrary={() => { }}
+                          handleSaveNotes={handleSaveQuranNotes}
+                          onLinkClick={handleLinkClick}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
+                </SortableContext>
+              </DndContext>
+            )}
+          </div>
+        )}
+
+        {/* ==================== ADMIN TAB ==================== */}
+        {tab === "admin" && isAdmin && (
+          <div className="space-y-16">
             <div className="space-y-8">
-              {renderLayoutToolbar("My Library", filteredBookmarks.length)}
-
-              {filteredBookmarks.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-32 border border-dashed border-white/10 rounded-[2rem]">
-                  <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No records found</span>
+              <LayoutToolbar title="Link Inbox" count={suggestions.length} searchQuery={searchQuery} setSearchQuery={setSearchQuery} sortBy={sortBy} setSortBy={setSortBy} viewMode={viewMode} setViewMode={setViewMode} isAdmin={isAdmin} />
+              {suggestions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/5 rounded-[2rem]">
+                  <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">Queue Empty</span>
                 </div>
               ) : (
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={filteredBookmarks} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
-                    <motion.div layout className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
-                      <AnimatePresence mode="popLayout">
-                        {filteredBookmarks.map((bookmark) => (
-                          <SortableBookmarkItem
-                            key={bookmark.id}
-                            bookmark={bookmark}
-                            handleDelete={handleDelete}
-                            handleSaveNotes={handleSaveNotes}
-                            isAdmin={isAdmin}
-                            viewMode={viewMode}
-                            onLinkClick={handleLinkClick}
-                          />
-                        ))}
-                      </AnimatePresence>
-                    </motion.div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleSuggestionDragEnd(e, "unapproved")}>
+                  <SortableContext items={suggestions} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
+                    <div className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
+                      {suggestions.map((suggestion) => (
+                        <SortableSuggestionItem
+                          key={suggestion.id}
+                          suggestion={suggestion}
+                          isAdmin={isAdmin}
+                          viewMode={viewMode}
+                          onMoveToPodcast={handleMoveToPodcast}
+                          onMoveToQuran={handleMoveToQuran}
+                          onReject={handleRejectSuggestion}
+                          handleSaveNotes={handleSaveSuggestionNotes}
+                          onLinkClick={handleLinkClick}
+                        />
+                      ))}
+                    </div>
                   </SortableContext>
                 </DndContext>
               )}
             </div>
-          </>
-        )}
-
-        {activeTab === "suggestions" && (
-          <div className="space-y-16">
-            <div className="bg-zinc-900/30 border border-white/5 p-8 rounded-[2rem] shadow-2xl">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-white tracking-tight">Any suggestions?</h2>
-                <p className="text-zinc-500 text-sm mt-1">Share with us your favourite Podcasts or Media links.</p>
-              </div>
-              <form onSubmit={handleSubmitSuggestion} className="flex gap-4">
-                <input type="url" required placeholder="https://..." value={suggestionUrl} onChange={(e) => setSuggestionUrl(e.target.value)} className="flex-1 px-6 py-4 text-sm bg-black border border-white/10 rounded-full focus:border-white/30 text-white placeholder-zinc-600 focus:outline-none transition-all" />
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" disabled={suggestionLoading} className="bg-white text-black px-8 py-4 rounded-full font-bold text-sm disabled:opacity-50 transition-colors">
-                  {suggestionLoading ? "Processing..." : "Submit"}
-                </motion.button>
-              </form>
-            </div>
-
-            <div className="space-y-16 w-full">
-              {/* AUDIT PIPELINE */}
-              {isAdmin && (
-                <div className="space-y-8">
-                  {renderLayoutToolbar("Audit Pipeline", unapprovedSuggestions.length)}
-                  {unapprovedSuggestions.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/5 rounded-[2rem]">
-                      <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">Queue Empty</span>
-                    </div>
-                  ) : (
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleSuggestionDragEnd(e, "unapproved")}>
-                      <SortableContext items={unapprovedSuggestions} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
-                        <div className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
-                          {unapprovedSuggestions.map((suggestion) => (
-                            <SortableSuggestionItem
-                              key={suggestion.id}
-                              suggestion={suggestion}
-                              isAdmin={isAdmin}
-                              viewMode={viewMode}
-                              onApprove={handleApproveSuggestion}
-                              onReject={handleRejectSuggestion}
-                              onMoveToLibrary={handleMoveToLibrary}
-                              handleSaveNotes={handleSaveSuggestionNotes}
-                              onLinkClick={handleLinkClick}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
-                  )}
-                </div>
-              )}
-
-              {/* APPROVED LOG */}
-              <div className="space-y-8">
-                {renderLayoutToolbar("More Suggestions", approvedSuggestions.length)}
-                {approvedSuggestions.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/5 rounded-[2rem]">
-                    <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No Approvals Yet</span>
-                  </div>
-                ) : (
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleSuggestionDragEnd(e, "approved")}>
-                    <SortableContext items={approvedSuggestions} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
-                      <div className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
-                        {approvedSuggestions.map((suggestion) => (
-                          <SortableSuggestionItem
-                            key={suggestion.id}
-                            suggestion={suggestion}
-                            isAdmin={isAdmin}
-                            viewMode={viewMode}
-                            onApprove={handleApproveSuggestion}
-                            onReject={handleRejectSuggestion}
-                            onMoveToLibrary={handleMoveToLibrary}
-                            handleSaveNotes={handleSaveSuggestionNotes}
-                            onLinkClick={handleLinkClick}
-                          />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  </DndContext>
-                )}
-              </div>
-            </div>
           </div>
         )}
-
-        {activeTab === "quran" && (
-          <div className="space-y-16">
-            <div className="bg-zinc-900/30 border border-white/5 p-8 rounded-[2rem] shadow-2xl">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-white tracking-tight">Any Quran links?</h2>
-                <p className="text-zinc-500 text-sm mt-1">Share with us your favourite Quran recitations or media links.</p>
-              </div>
-              <form onSubmit={handleSubmitQuran} className="flex gap-4">
-                <input type="url" required placeholder="https://..." value={quranUrl} onChange={(e) => setQuranUrl(e.target.value)} className="flex-1 px-6 py-4 text-sm bg-black border border-white/10 rounded-full focus:border-white/30 text-white placeholder-zinc-600 focus:outline-none transition-all" />
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" disabled={quranLoading} className="bg-white text-black px-8 py-4 rounded-full font-bold text-sm disabled:opacity-50 transition-colors">
-                  {quranLoading ? "Processing..." : "Submit"}
-                </motion.button>
-              </form>
-            </div>
-
-            <div className="space-y-16 w-full">
-              {/* AUDIT PIPELINE */}
-              {isAdmin && (
-                <div className="space-y-8">
-                  {renderLayoutToolbar("Quran", unapprovedQurans.length)}
-                  {unapprovedQurans.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/5 rounded-[2rem]">
-                      <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">Queue Empty</span>
-                    </div>
-                  ) : (
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleQuranDragEnd(e, "unapproved")}>
-                      <SortableContext items={unapprovedQurans} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
-                        <div className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
-                          {unapprovedQurans.map((quranItem) => (
-                            <SortableSuggestionItem
-                              key={quranItem.id}
-                              suggestion={quranItem}
-                              isAdmin={isAdmin}
-                              viewMode={viewMode}
-                              onApprove={handleApproveQuran}
-                              onReject={handleRejectQuran}
-                              onMoveToLibrary={handleMoveQuranToLibrary}
-                              handleSaveNotes={handleSaveQuranNotes}
-                              onLinkClick={handleLinkClick}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
-                  )}
-                </div>
-              )}
-
-              {/* APPROVED LOG */}
-              <div className="space-y-8">
-                {renderLayoutToolbar("Quran", approvedQurans.length)}
-                {approvedQurans.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/5 rounded-[2rem]">
-                    <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No Approvals Yet</span>
-                  </div>
-                ) : (
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleQuranDragEnd(e, "approved")}>
-                    <SortableContext items={approvedQurans} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
-                      <div className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
-                        {approvedQurans.map((quranItem) => (
-                          <SortableSuggestionItem
-                            key={quranItem.id}
-                            suggestion={quranItem}
-                            isAdmin={isAdmin}
-                            viewMode={viewMode}
-                            onApprove={handleApproveQuran}
-                            onReject={handleRejectQuran}
-                            onMoveToLibrary={handleMoveQuranToLibrary}
-                            handleSaveNotes={handleSaveQuranNotes}
-                            onLinkClick={handleLinkClick}
-                          />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  </DndContext>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      
-      {/* Admin Passcode Modal */}
-      <AnimatePresence>
-        {isAdminModalOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} 
-              animate={{ scale: 1, opacity: 1 }} 
-              exit={{ scale: 0.95, opacity: 0 }} 
-              className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
-            >
-              <h3 className="text-xl font-bold text-white mb-4">Admin Access</h3>
-              <form onSubmit={submitAdminPasscode} className="flex flex-col gap-4">
-                <input 
-                  type="password" 
-                  autoFocus
-                  placeholder="Enter passcode..." 
-                  value={adminPasscode} 
-                  onChange={(e) => setAdminPasscode(e.target.value)} 
-                  className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-white/30 transition-colors"
-                />
-                <div className="flex justify-end gap-2">
-                  <button type="button" onClick={() => setIsAdminModalOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-zinc-400 hover:text-white transition-colors">Cancel</button>
-                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" className="px-4 py-2 rounded-xl text-sm font-bold bg-white text-black hover:bg-zinc-200 transition-colors">Unlock</motion.button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
       </main>
+
+      {/* Add Link Sheet */}
+      <AnimatePresence>
+        {showAdd && <AddSheet onClose={() => setShowAdd(false)} onIngest={handleIngest} />}
+      </AnimatePresence>
     </div>
   );
 }
