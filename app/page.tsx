@@ -407,6 +407,12 @@ const AddSheet = ({ onClose, onIngest }: any) => {
           <input
             value={url}
             onChange={e => setUrl(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSave();
+              }
+            }}
             placeholder="Paste a YouTube or media URL..."
             autoFocus
             className="w-full p-4 bg-black/40 border border-white/10 rounded-full text-sm text-zinc-100 outline-none focus:border-white/30 transition-colors placeholder:text-zinc-600"
@@ -593,6 +599,10 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [lastOpenedId, setLastOpenedId] = useState<string | null>(null);
   const [currentHour, setCurrentHour] = useState(Math.floor(Date.now() / (1000 * 60 * 60)));
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [tab]);
 
   useEffect(() => {
     const saved = localStorage.getItem('lastOpenedId');
