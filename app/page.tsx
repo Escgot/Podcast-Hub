@@ -249,8 +249,8 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onMoveToPodcast
 
         {isAdmin && !isList && (
           <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-out">
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToPodcast(suggestion)} className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-bold transition-colors hover:bg-zinc-200">🎙️ To Podcast</motion.button>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToQuran(suggestion)} className="px-5 py-2.5 rounded-full bg-emerald-500 text-white text-xs font-bold transition-colors hover:bg-emerald-600">📖 To Quran</motion.button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToPodcast(suggestion)} className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-bold transition-colors hover:bg-zinc-200">To Podcast</motion.button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToQuran(suggestion)} className="px-5 py-2.5 rounded-full bg-emerald-500 text-white text-xs font-bold transition-colors hover:bg-emerald-600">To Quran</motion.button>
             <button onClick={() => setIsEditing(!isEditing)} className="p-3 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
             </button>
@@ -321,8 +321,8 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onMoveToPodcast
 
         {isAdmin && isList && (
           <div className="mt-8 flex gap-3">
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToPodcast(suggestion)} className="bg-white text-black hover:bg-zinc-200 px-6 py-2.5 rounded-full text-xs font-bold transition-colors">🎙️ To Podcast</motion.button>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToQuran(suggestion)} className="bg-emerald-500 text-white hover:bg-emerald-600 px-6 py-2.5 rounded-full text-xs font-bold transition-colors">📖 To Quran</motion.button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToPodcast(suggestion)} className="bg-white text-black hover:bg-zinc-200 px-6 py-2.5 rounded-full text-xs font-bold transition-colors">To Podcast</motion.button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToQuran(suggestion)} className="bg-emerald-500 text-white hover:bg-emerald-600 px-6 py-2.5 rounded-full text-xs font-bold transition-colors">To Quran</motion.button>
           </div>
         )}
 
@@ -433,8 +433,8 @@ const AddSheet = ({ onClose, onIngest }: any) => {
 const Navigation = ({ tab, setTab, onAdd, isAdmin }: any) => {
   const items = [
     { k: 'home', l: 'Home', i: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
-    { k: 'podcasts', l: 'Podcasts', i: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> },
-    { k: 'quran', l: 'Quran', i: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg> },
+    { k: 'podcasts', l: 'Podcasts', i: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg> },
+    { k: 'quran', l: 'Quran', i: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg> },
   ];
   if (isAdmin) items.push({ k: 'admin', l: 'Admin', i: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg> });
 
@@ -444,7 +444,7 @@ const Navigation = ({ tab, setTab, onAdd, isAdmin }: any) => {
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-zinc-950/80 backdrop-blur-xl border-t border-white/5 flex justify-around items-center pt-2 pb-6 z-50 px-2">
         {items.map(({ k, l, i }, idx) => (
           <div key={k} className="flex items-center">
-            {idx === 1 && (
+            {idx === Math.floor(items.length / 2) && (
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={onAdd}
@@ -527,7 +527,7 @@ const LayoutToolbar = ({ title, count, searchQuery, setSearchQuery, sortBy, setS
         />
       </div>
 
-      <div className="flex items-center justify-between sm:justify-start gap-2">
+      <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2">
         <div className="flex bg-black p-1 rounded-full border border-white/5 relative">
           {[
             { id: "default", label: "Default Sort" },
@@ -586,10 +586,23 @@ const LayoutToolbar = ({ title, count, searchQuery, setSearchQuery, sortBy, setS
 // ============================================================================
 export default function Home() {
   const [tab, setTab] = useState("home");
+
   const [showAdd, setShowAdd] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [lastOpenedId, setLastOpenedId] = useState<string | null>(null);
+  const [currentHour, setCurrentHour] = useState(Math.floor(Date.now() / (1000 * 60 * 60)));
+
+  useEffect(() => {
+    const saved = localStorage.getItem('lastOpenedId');
+    if (saved) setLastOpenedId(saved);
+    
+    const interval = setInterval(() => {
+      setCurrentHour(Math.floor(Date.now() / (1000 * 60 * 60)));
+    }, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
   const [sortBy, setSortBy] = useState<"default" | "views" | "clicked">("default");
 
   const [bookmarks, setBookmarks] = useState<any[]>([]);
@@ -675,7 +688,7 @@ export default function Home() {
   };
 
   const handleAdminUnlock = () => {
-    if (isAdmin) { setIsAdmin(false); toast("Admin mode locked", { icon: "🔒" }); setTab('home'); return; }
+    if (isAdmin) { setIsAdmin(false); toast("Admin mode locked"); setTab('home'); return; }
     setIsAdminModalOpen(true);
   };
 
@@ -728,9 +741,7 @@ export default function Home() {
     const newClicks = (item.hub_clicks || 0) + 1;
     let table = "bookmarks";
     if (tab === "admin") {
-      // Determine table from context
-      if (suggestions.some(s => s.id === item.id)) table = "suggestions";
-      else if (qurans.some(q => q.id === item.id)) table = "quran";
+      table = "suggestions";
     }
     if (tab === "quran") {
       table = "quran";
@@ -742,6 +753,8 @@ export default function Home() {
       setQurans(prev => prev.map(q => q.id === item.id ? { ...q, hub_clicks: newClicks } : q));
     } else {
       setBookmarks(prev => prev.map(b => b.id === item.id ? { ...b, hub_clicks: newClicks } : b));
+      setLastOpenedId(item.id);
+      localStorage.setItem('lastOpenedId', item.id);
     }
 
     await supabase.from(table).update({ hub_clicks: newClicks }).eq("id", item.id);
@@ -772,11 +785,6 @@ export default function Home() {
   };
 
   // --- SUGGESTION FUNCTIONS ---
-  const handleApproveSuggestion = async (id: string) => {
-    await supabase.from("suggestions").update({ is_approved: true }).eq("id", id);
-    setSuggestions(suggestions.map(s => s.id === id ? { ...s, is_approved: true } : s));
-  };
-
   const handleRejectSuggestion = async (id: string) => {
     await supabase.from("suggestions").delete().eq("id", id);
     setSuggestions(suggestions.filter(s => s.id !== id));
@@ -787,68 +795,64 @@ export default function Home() {
     setSuggestions(suggestions.map(s => s.id === id ? { ...s, notes } : s));
   };
 
-  const handleMoveToPodcast = async (suggestion: any) => {
+  const handleSuggestionDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setSuggestions((items) => {
+      const oldIndex = items.findIndex((i) => i.id === active.id);
+      const newIndex = items.findIndex((i) => i.id === over.id);
+      const newArray = arrayMove(items, oldIndex, newIndex);
+      newArray.forEach((item, index) => {
+        supabase.from("suggestions").update({ sort_order: index }).eq("id", item.id).then();
+      });
+      return newArray;
+    });
+  };
+
+  const handleMoveToPodcast = async (item: any) => {
     const minSortOrder = bookmarks.length > 0 ? Math.min(...bookmarks.map(b => b.sort_order ?? 0)) : 0;
     const { data } = await supabase.from("bookmarks").insert([{
-      url: suggestion.url,
-      podcast_name: suggestion.podcast_name,
-      episode_title: suggestion.episode_title,
-      platform: suggestion.platform,
-      description: suggestion.description,
-      thumbnail_url: suggestion.thumbnail_url,
-      publish_date: suggestion.publish_date,
-      view_count: suggestion.view_count,
-      hub_clicks: suggestion.hub_clicks || 0,
+      url: item.url,
+      podcast_name: item.podcast_name,
+      episode_title: item.episode_title,
+      platform: item.platform,
+      description: item.description,
+      thumbnail_url: item.thumbnail_url,
+      publish_date: item.publish_date,
+      view_count: item.view_count,
+      hub_clicks: item.hub_clicks || 0,
       sort_order: minSortOrder - 1
     }]).select();
 
     if (data) {
       setBookmarks([data[0], ...bookmarks]);
-      handleRejectSuggestion(suggestion.id);
+      handleRejectSuggestion(item.id);
     }
   };
 
-  const handleMoveToQuran = async (suggestion: any) => {
+  const handleMoveToQuran = async (item: any) => {
     const minSortOrder = qurans.length > 0 ? Math.min(...qurans.map(q => q.sort_order ?? 0)) : 0;
     const { data } = await supabase.from("quran").insert([{
-      url: suggestion.url,
-      podcast_name: suggestion.podcast_name,
-      episode_title: suggestion.episode_title,
-      platform: suggestion.platform,
-      description: suggestion.description,
-      thumbnail_url: suggestion.thumbnail_url,
-      publish_date: suggestion.publish_date,
-      view_count: suggestion.view_count,
-      hub_clicks: suggestion.hub_clicks || 0,
+      url: item.url,
+      podcast_name: item.podcast_name,
+      episode_title: item.episode_title,
+      platform: item.platform,
+      description: item.description,
+      thumbnail_url: item.thumbnail_url,
+      publish_date: item.publish_date,
+      view_count: item.view_count,
+      hub_clicks: item.hub_clicks || 0,
       sort_order: minSortOrder - 1,
       is_approved: true
     }]).select();
 
     if (data) {
       setQurans([data[0], ...qurans]);
-      handleRejectSuggestion(suggestion.id);
+      handleRejectSuggestion(item.id);
     }
   };
 
-  const handleSuggestionDragEnd = (event: any, listType: "approved" | "unapproved") => {
-    const { active, over } = event;
-    if (active && over && active.id !== over.id && isAdmin) {
-      setSuggestions((allItems) => {
-        const isAppr = listType === "approved";
-        const targetList = allItems.filter(s => s.is_approved === isAppr);
-        const otherList = allItems.filter(s => s.is_approved !== isAppr);
-        const oldIndex = targetList.findIndex(item => item.id === active.id);
-        const newIndex = targetList.findIndex(item => item.id === over.id);
-        if (oldIndex === -1 || newIndex === -1) return allItems;
-        const reorderedList = arrayMove(targetList, oldIndex, newIndex);
-        const updatedReorderedList = reorderedList.map((item, index) => {
-          supabase.from("suggestions").update({ sort_order: index }).eq("id", item.id).then();
-          return { ...item, sort_order: index };
-        });
-        return [...updatedReorderedList, ...otherList];
-      });
-    }
-  };
+
 
   // --- QURAN FUNCTIONS ---
   const handleApproveQuran = async (id: string) => {
@@ -893,9 +897,7 @@ export default function Home() {
       const preview = await res.json();
       if (!res.ok) throw new Error(preview.error || "Scrape failed");
 
-      const table = type === 'podcast' ? 'bookmarks' : (type === 'quran' ? 'quran' : 'suggestions');
-      const stateArr = type === 'podcast' ? bookmarks : (type === 'quran' ? qurans : suggestions);
-      const minSortOrder = stateArr.length > 0 ? Math.min(...stateArr.map(b => b.sort_order ?? 0)) : 0;
+      const minSortOrder = suggestions.length > 0 ? Math.min(...suggestions.map(s => s.sort_order ?? 0)) : 0;
 
       const payload: any = {
         url: preview.url,
@@ -907,14 +909,13 @@ export default function Home() {
         publish_date: preview.publish_date,
         view_count: preview.view_count,
         hub_clicks: 0,
-        sort_order: minSortOrder - 1
+        sort_order: minSortOrder - 1,
+        is_approved: false
       };
 
-      if (type !== 'podcast') payload.is_approved = false;
-
-      const { error } = await supabase.from(table).insert([payload]);
+      const { error } = await supabase.from("suggestions").insert([payload]);
       if (error) throw error;
-      toast.success("Saved successfully!");
+      toast.success("Link added to Inbox!");
     } catch (err: any) {
       toast.error(err.message || "Failed to process");
     }
@@ -922,14 +923,12 @@ export default function Home() {
 
   // Derived filtered/sorted arrays
   const filteredBookmarks = processItems(bookmarks);
+  
+  const inboxItems = sortBy !== "default"
+    ? processItems(suggestions)
+    : processItems(suggestions).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
-  const unapprovedSuggestions = sortBy !== "default"
-    ? processItems(suggestions.filter(s => !s.is_approved))
-    : processItems(suggestions.filter(s => !s.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
-  const approvedSuggestions = sortBy !== "default"
-    ? processItems(suggestions.filter(s => s.is_approved))
-    : processItems(suggestions.filter(s => s.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
   const unapprovedQurans = sortBy !== "default"
     ? processItems(qurans.filter(q => !q.is_approved))
@@ -940,12 +939,25 @@ export default function Home() {
     : processItems(qurans.filter(q => q.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
   // Home screen items
-  const latestPodcast = [...bookmarks].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+  const latestPodcast = useMemo(() => {
+    if (lastOpenedId) {
+      const found = bookmarks.find(x => x.id === lastOpenedId);
+      if (found) return found;
+    }
+    return [...bookmarks].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+  }, [bookmarks, lastOpenedId]);
+  
   const randomQuran = useMemo(() => {
     const approved = qurans.filter(q => q.is_approved);
     if (approved.length === 0) return null;
-    return approved[Math.floor(Math.random() * approved.length)];
-  }, [qurans]);
+    
+    // Sort array so order is deterministic
+    const sorted = [...approved].sort((a, b) => a.id.localeCompare(b.id));
+    
+    // Pseudo-random index based on the current hour (changes every hour)
+    const index = (currentHour * 137) % sorted.length;
+    return sorted[index];
+  }, [qurans, currentHour]);
 
   // Combined library items
   const allLibraryItems = [
@@ -995,7 +1007,7 @@ export default function Home() {
             <div>
               <div className="text-xs font-medium text-zinc-500 mb-1 tracking-wider uppercase">{DATE_STR}</div>
               <h1 className="text-3xl sm:text-4xl font-bold text-zinc-100 cursor-pointer" onClick={handleAdminUnlock}>
-                {GREETING}, <span className="text-indigo-400">Mohamed</span>
+                {GREETING}
               </h1>
             </div>
 
@@ -1042,30 +1054,30 @@ export default function Home() {
             />
 
             {filteredBookmarks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-32 border border-dashed border-white/10 rounded-[2rem]">
-                <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No podcasts found</span>
-              </div>
-            ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={filteredBookmarks} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
-                  <motion.div layout className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
-                    <AnimatePresence mode="popLayout">
-                      {filteredBookmarks.map((bookmark) => (
-                        <SortableBookmarkItem
-                          key={bookmark.id}
-                          bookmark={bookmark}
-                          handleDelete={handleDelete}
-                          handleSaveNotes={handleSaveNotes}
-                          isAdmin={isAdmin}
-                          viewMode={viewMode}
-                          onLinkClick={handleLinkClick}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </motion.div>
-                </SortableContext>
-              </DndContext>
-            )}
+                <div className="flex flex-col items-center justify-center py-32 border border-dashed border-white/10 rounded-[2rem]">
+                  <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No podcasts found</span>
+                </div>
+              ) : (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={filteredBookmarks} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
+                    <motion.div layout className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
+                      <AnimatePresence mode="popLayout">
+                        {filteredBookmarks.map((bookmark) => (
+                          <SortableBookmarkItem
+                            key={bookmark.id}
+                            bookmark={bookmark}
+                            handleDelete={handleDelete}
+                            handleSaveNotes={handleSaveNotes}
+                            isAdmin={isAdmin}
+                            viewMode={viewMode}
+                            onLinkClick={handleLinkClick}
+                          />
+                        ))}
+                      </AnimatePresence>
+                    </motion.div>
+                  </SortableContext>
+                </DndContext>
+              )}
           </div>
         )}
 
@@ -1085,32 +1097,30 @@ export default function Home() {
             />
 
             {approvedQurans.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-32 border border-dashed border-white/10 rounded-[2rem]">
-                <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No Quran videos found</span>
-              </div>
-            ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleQuranDragEnd(e, "approved")}>
-                <SortableContext items={approvedQurans} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
-                  <motion.div layout className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
-                    <AnimatePresence mode="popLayout">
-                      {approvedQurans.map((q) => (
-                        <SortableSuggestionItem
-                          key={q.id}
-                          suggestion={q}
-                          isAdmin={isAdmin}
-                          viewMode={viewMode}
-                          onApprove={handleApproveQuran}
-                          onReject={handleRejectQuran}
-                          onMoveToLibrary={() => { }}
-                          handleSaveNotes={handleSaveQuranNotes}
-                          onLinkClick={handleLinkClick}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </motion.div>
-                </SortableContext>
-              </DndContext>
-            )}
+                <div className="flex flex-col items-center justify-center py-32 border border-dashed border-white/10 rounded-[2rem]">
+                  <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">No Quran videos found</span>
+                </div>
+              ) : (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleQuranDragEnd(e, "approved")}>
+                  <SortableContext items={approvedQurans} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
+                    <motion.div layout className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
+                      <AnimatePresence mode="popLayout">
+                        {approvedQurans.map((q) => (
+                          <SortableBookmarkItem
+                            key={q.id}
+                            bookmark={q}
+                            handleDelete={handleRejectQuran}
+                            handleSaveNotes={handleSaveQuranNotes}
+                            isAdmin={isAdmin}
+                            viewMode={viewMode}
+                            onLinkClick={handleLinkClick}
+                          />
+                        ))}
+                      </AnimatePresence>
+                    </motion.div>
+                  </SortableContext>
+                </DndContext>
+              )}
           </div>
         )}
 
@@ -1118,19 +1128,19 @@ export default function Home() {
         {tab === "admin" && isAdmin && (
           <div className="space-y-16">
             <div className="space-y-8">
-              <LayoutToolbar title="Link Inbox" count={suggestions.length} searchQuery={searchQuery} setSearchQuery={setSearchQuery} sortBy={sortBy} setSortBy={setSortBy} viewMode={viewMode} setViewMode={setViewMode} isAdmin={isAdmin} />
-              {suggestions.length === 0 ? (
+              <LayoutToolbar title="Link Inbox" count={inboxItems.length} searchQuery={searchQuery} setSearchQuery={setSearchQuery} sortBy={sortBy} setSortBy={setSortBy} viewMode={viewMode} setViewMode={setViewMode} isAdmin={isAdmin} />
+              {inboxItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/5 rounded-[2rem]">
                   <span className="text-zinc-600 font-medium tracking-widest text-xs uppercase">Queue Empty</span>
                 </div>
               ) : (
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleSuggestionDragEnd(e, "unapproved")}>
-                  <SortableContext items={suggestions} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSuggestionDragEnd}>
+                  <SortableContext items={inboxItems} strategy={viewMode === "list" ? verticalListSortingStrategy : rectSortingStrategy}>
                     <div className={viewMode === "list" ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
-                      {suggestions.map((suggestion) => (
+                      {inboxItems.map((item) => (
                         <SortableSuggestionItem
-                          key={suggestion.id}
-                          suggestion={suggestion}
+                          key={item.id}
+                          suggestion={item}
                           isAdmin={isAdmin}
                           viewMode={viewMode}
                           onMoveToPodcast={handleMoveToPodcast}

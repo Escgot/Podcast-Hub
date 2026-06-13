@@ -229,7 +229,7 @@ const HomeScreen = ({ bookmarks, qurans, onLibrary, onAdminClick }: any) => {
       <div className="mb-8">
         <div className="text-xs font-medium text-zinc-500 mb-1 tracking-wider uppercase">{DATE_STR}</div>
         <h1 className="text-3xl sm:text-4xl font-bold text-zinc-100" onClick={onAdminClick}>
-          {GREETING}, <span className="text-indigo-400">Mohamed</span>
+          {GREETING}
         </h1>
       </div>
 
