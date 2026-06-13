@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors
@@ -31,7 +32,7 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
     navigator.clipboard.writeText(bookmark.url);
-    alert("Link copied to clipboard!");
+    toast.success("Link copied to clipboard!");
   };
 
   return (
@@ -185,7 +186,7 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
     navigator.clipboard.writeText(suggestion.url);
-    alert("Link copied to clipboard!");
+    toast.success("Link copied to clipboard!");
   };
 
   return (
@@ -234,9 +235,9 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
         {isAdmin && !isList && (
           <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-out">
             {!suggestion.is_approved ? (
-              <button onClick={() => onApprove(suggestion.id)} className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-bold transition-all hover:bg-zinc-200">Approve</button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onApprove(suggestion.id)} className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-bold transition-colors hover:bg-zinc-200">Approve</motion.button>
             ) : (
-              <button onClick={() => onMoveToLibrary(suggestion)} className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-bold transition-all hover:bg-zinc-200">Deploy</button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onMoveToLibrary(suggestion)} className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-bold transition-colors hover:bg-zinc-200">Deploy</motion.button>
             )}
             <button onClick={() => setIsEditing(!isEditing)} className="p-3 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
@@ -310,7 +311,7 @@ function SortableSuggestionItem({ suggestion, isAdmin, viewMode, onApprove, onRe
         {/* List Mode Actions (Approve) */}
         {isAdmin && isList && !suggestion.is_approved && (
           <div className="mt-8 flex gap-3">
-            <button onClick={() => onApprove(suggestion.id)} className="bg-white text-black hover:bg-zinc-200 px-6 py-2.5 rounded-full text-xs font-bold transition-all">Approve Submission</button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => onApprove(suggestion.id)} className="bg-white text-black hover:bg-zinc-200 px-6 py-2.5 rounded-full text-xs font-bold transition-colors">Approve Submission</motion.button>
           </div>
         )}
 
@@ -434,12 +435,27 @@ export default function Home() {
     if (data) setQurans(data);
   };
 
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [adminPasscode, setAdminPasscode] = useState("");
+
   const handleAdminUnlock = () => {
-    if (isAdmin) { setIsAdmin(false); return; }
-    const passcode = window.prompt("Enter Admin Passcode:");
+    if (isAdmin) { setIsAdmin(false); toast("Admin mode locked", { icon: "🔒" }); return; }
+    setIsAdminModalOpen(true);
+  };
+
+  const submitAdminPasscode = (e: React.FormEvent) => {
+    e.preventDefault();
     const correctPasscode = process.env.NEXT_PUBLIC_ADMIN_PASSCODE || "7412";
-    if (passcode === correctPasscode) { setIsAdmin(true); }
-    else if (passcode !== null) { alert("Incorrect passcode."); }
+    if (adminPasscode === correctPasscode) { 
+      setIsAdmin(true); 
+      setIsAdminModalOpen(false); 
+      setAdminPasscode("");
+      toast.success("Admin unlocked");
+    }
+    else { 
+      toast.error("Incorrect passcode."); 
+      setAdminPasscode("");
+    }
   };
 
   // Filter and Sort Processing Engine (FIXED: Targeted podcast_name & platform correctly)
@@ -494,14 +510,14 @@ export default function Home() {
   // --- LIBRARY FUNCTIONS ---
   const handleScrape = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url.trim()) return alert("Please paste a URL first!");
+    if (!url.trim()) return toast.error("Please paste a URL first!");
     setLoading(true); setPreview(null);
     try {
       const res = await fetch("/api/scrape", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: url.trim() }) });
       const data = await res.json();
       if (res.ok) setPreview(data);
-      else alert("Scraper Error: " + (data.error || "Could not parse the link."));
-    } catch (err) { alert("Network Error"); } finally { setLoading(false); }
+      else toast.error("Scraper Error: " + (data.error || "Could not parse the link."));
+    } catch (err) { toast.error("Network Error"); } finally { setLoading(false); }
   };
 
   const handleSave = async () => {
@@ -523,7 +539,7 @@ export default function Home() {
       sort_order: minSortOrder - 1
     }]).select();
 
-    if (error) { alert("Database Error: " + error.message); return; }
+    if (error) { toast.error("Database Error: " + error.message); return; }
     if (data) {
       setBookmarks([data[0], ...bookmarks]); // Prepend locally
       setPreview(null);
@@ -578,13 +594,13 @@ export default function Home() {
           sort_order: minSortOrder - 1,
           is_approved: false
         }]).select();
-        if (error) { alert("Database Error: " + error.message); }
+        if (error) { toast.error("Database Error: " + error.message); }
         else if (data) {
           setSuggestions([data[0], ...suggestions]); // Prepend locally
           setSuggestionUrl("");
-          alert("Suggestion submitted for review.");
+          toast.success("Suggestion submitted for review.");
         }
-      } else { alert("Could not pull data."); }
+      } else { toast.error("Could not pull data."); }
     } catch (err) { console.error("Scrape failed", err); } finally { setSuggestionLoading(false); }
   };
 
@@ -676,13 +692,13 @@ export default function Home() {
           sort_order: minSortOrder - 1,
           is_approved: false
         }]).select();
-        if (error) { alert("Database Error: " + error.message); }
+        if (error) { toast.error("Database Error: " + error.message); }
         else if (data) {
           setQurans([data[0], ...qurans]); // Prepend locally
           setQuranUrl("");
-          alert("Quran link submitted for review.");
+          toast.success("Quran link submitted for review.");
         }
-      } else { alert("Could not pull data."); }
+      } else { toast.error("Could not pull data."); }
     } catch (err) { console.error("Scrape failed", err); } finally { setQuranLoading(false); }
   };
 
@@ -823,19 +839,19 @@ export default function Home() {
   );
 
   // Derived filtered/sorted arrays to perfectly handle searches and layout arrangements
-  const unapprovedSuggestions = sortBy === "views"
+  const unapprovedSuggestions = sortBy !== "default"
     ? processItems(suggestions.filter(s => !s.is_approved))
     : processItems(suggestions.filter(s => !s.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
-  const approvedSuggestions = sortBy === "views"
+  const approvedSuggestions = sortBy !== "default"
     ? processItems(suggestions.filter(s => s.is_approved))
     : processItems(suggestions.filter(s => s.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
-  const unapprovedQurans = sortBy === "views"
+  const unapprovedQurans = sortBy !== "default"
     ? processItems(qurans.filter(q => !q.is_approved))
     : processItems(qurans.filter(q => !q.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
-  const approvedQurans = sortBy === "views"
+  const approvedQurans = sortBy !== "default"
     ? processItems(qurans.filter(q => q.is_approved))
     : processItems(qurans.filter(q => q.is_approved)).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
@@ -880,9 +896,9 @@ export default function Home() {
               <div className="bg-zinc-900/30 border border-white/5 p-8 rounded-[2rem] shadow-2xl">
                 <form onSubmit={handleScrape} className="flex gap-4">
                   <input type="url" required placeholder="Paste media URL to parse..." value={url} onChange={(e) => setUrl(e.target.value)} className="flex-1 px-6 py-4 text-sm bg-black border border-white/10 rounded-full focus:border-white/30 text-white placeholder-zinc-600 focus:outline-none transition-all" />
-                  <button type="submit" disabled={loading} className="bg-white text-black px-8 py-4 rounded-full font-bold text-sm hover:bg-zinc-200 active:scale-95 disabled:opacity-50 transition-all flex-shrink-0">
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" disabled={loading} className="bg-white text-black px-8 py-4 rounded-full font-bold text-sm disabled:opacity-50 transition-colors flex-shrink-0">
                     {loading ? "Parsing..." : "Ingest"}
-                  </button>
+                  </motion.button>
                 </form>
 
                 {preview && (
@@ -891,7 +907,7 @@ export default function Home() {
                       {preview.thumbnail_url && <img src={preview.thumbnail_url} alt="Cover" className="w-12 h-12 object-cover rounded-full border border-white/10" />}
                       <h3 className="font-semibold text-sm text-white line-clamp-1">{preview.episode_title}</h3>
                     </div>
-                    <button onClick={handleSave} className="bg-white text-black px-6 py-2.5 rounded-full text-xs font-bold hover:bg-zinc-200 transition-all whitespace-nowrap">Commit</button>
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleSave} className="bg-white text-black px-6 py-2.5 rounded-full text-xs font-bold hover:bg-zinc-200 transition-colors whitespace-nowrap">Commit</motion.button>
                   </div>
                 )}
               </div>
@@ -938,9 +954,9 @@ export default function Home() {
               </div>
               <form onSubmit={handleSubmitSuggestion} className="flex gap-4">
                 <input type="url" required placeholder="https://..." value={suggestionUrl} onChange={(e) => setSuggestionUrl(e.target.value)} className="flex-1 px-6 py-4 text-sm bg-black border border-white/10 rounded-full focus:border-white/30 text-white placeholder-zinc-600 focus:outline-none transition-all" />
-                <button type="submit" disabled={suggestionLoading} className="bg-white text-black px-8 py-4 rounded-full font-bold text-sm hover:bg-zinc-200 disabled:opacity-50 transition-all">
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" disabled={suggestionLoading} className="bg-white text-black px-8 py-4 rounded-full font-bold text-sm disabled:opacity-50 transition-colors">
                   {suggestionLoading ? "Processing..." : "Submit"}
-                </button>
+                </motion.button>
               </form>
             </div>
 
@@ -1019,9 +1035,9 @@ export default function Home() {
               </div>
               <form onSubmit={handleSubmitQuran} className="flex gap-4">
                 <input type="url" required placeholder="https://..." value={quranUrl} onChange={(e) => setQuranUrl(e.target.value)} className="flex-1 px-6 py-4 text-sm bg-black border border-white/10 rounded-full focus:border-white/30 text-white placeholder-zinc-600 focus:outline-none transition-all" />
-                <button type="submit" disabled={quranLoading} className="bg-white text-black px-8 py-4 rounded-full font-bold text-sm hover:bg-zinc-200 disabled:opacity-50 transition-all">
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" disabled={quranLoading} className="bg-white text-black px-8 py-4 rounded-full font-bold text-sm disabled:opacity-50 transition-colors">
                   {quranLoading ? "Processing..." : "Submit"}
-                </button>
+                </motion.button>
               </form>
             </div>
 
@@ -1090,6 +1106,41 @@ export default function Home() {
             </div>
           </div>
         )}
+      
+      {/* Admin Passcode Modal */}
+      <AnimatePresence>
+        {isAdminModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.95, opacity: 0 }} 
+              className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+            >
+              <h3 className="text-xl font-bold text-white mb-4">Admin Access</h3>
+              <form onSubmit={submitAdminPasscode} className="flex flex-col gap-4">
+                <input 
+                  type="password" 
+                  autoFocus
+                  placeholder="Enter passcode..." 
+                  value={adminPasscode} 
+                  onChange={(e) => setAdminPasscode(e.target.value)} 
+                  className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-white/30 transition-colors"
+                />
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setIsAdminModalOpen(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-zinc-400 hover:text-white transition-colors">Cancel</button>
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" className="px-4 py-2 rounded-xl text-sm font-bold bg-white text-black hover:bg-zinc-200 transition-colors">Unlock</motion.button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       </main>
     </div>
   );
