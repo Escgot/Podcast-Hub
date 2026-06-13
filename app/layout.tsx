@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Cairo } from "next/font/google"; // Pulling in your fonts
+import { Inter, Noto_Kufi_Arabic } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
@@ -9,9 +9,9 @@ const inter = Inter({
   variable: "--font-inter"
 });
 
-const cairo = Cairo({
-  subsets: ["arabic", "latin"], // Add weights or subsets if needed
-  variable: "--font-cairo"
+const notoKufiArabic = Noto_Kufi_Arabic({
+  subsets: ["arabic", "latin"],
+  variable: "--font-arabic"
 });
 
 // 2. Set your browser tab title and site description here
@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     // 3. Keep the font variables injected here so Tailwind 'font-sans' works!
-    <html lang="en" className={`${inter.variable} ${cairo.variable}`}>
+    <html lang="en" className={`${inter.variable} ${notoKufiArabic.variable}`}>
       <body className="font-sans bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500/30">
         {children}
         <Toaster 

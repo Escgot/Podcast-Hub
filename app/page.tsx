@@ -60,27 +60,30 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
       ref={setNodeRef}
       style={style}
       className={`group relative flex transition-all duration-500 ${isList
-        ? "flex-col md:flex-row gap-8 p-3 rounded-[2rem] items-center"
+        ? "flex-row gap-4 p-3 rounded-2xl sm:flex-col sm:flex-row sm:gap-8 sm:p-3 sm:rounded-[2rem] items-center"
         : "flex-col rounded-[2rem] overflow-hidden"
         } ${isDragging
           ? "bg-zinc-800/80 border-zinc-500 shadow-2xl scale-[1.02] z-50 backdrop-blur-xl"
           : "bg-zinc-900/20 border border-white/5 hover:bg-zinc-900/50 hover:border-white/10 z-10"
         }`}
     >
-      <div className={`relative bg-black flex-shrink-0 overflow-hidden ${isList ? "w-full sm:w-80 md:w-[22rem] aspect-video rounded-[1.5rem]" : "w-full aspect-video rounded-t-[2rem]"
+      {/* THUMBNAIL */}
+      <div className={`relative bg-black flex-shrink-0 overflow-hidden ${isList
+        ? "w-16 h-16 rounded-xl sm:w-80 sm:aspect-video sm:h-auto md:w-[22rem] sm:rounded-[1.5rem]"
+        : "w-full aspect-video rounded-t-[2rem]"
         }`}>
         {bookmark.thumbnail_url ? (
           <img src={bookmark.thumbnail_url} alt="Cover" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-90 group-hover:opacity-100" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-zinc-900 border border-white/5">
-            <span className="text-zinc-600 font-medium tracking-[0.2em] uppercase text-[10px]">No Artwork</span>
+            <span className="text-zinc-600 font-medium tracking-[0.2em] uppercase text-[10px] hidden sm:block">No Artwork</span>
           </div>
         )}
 
         <div className="absolute inset-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)] rounded-[inherit] pointer-events-none" />
 
         {isAdmin && (
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-4 left-4 hidden sm:block">
             <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-2.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 text-zinc-400 hover:text-white transition-all">
               <svg className="w-4 h-4" viewBox="0 0 16 24" fill="currentColor">
                 <circle cx="6" cy="6" r="1.5" /><circle cx="10" cy="6" r="1.5" />
@@ -103,12 +106,21 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
         )}
       </div>
 
-      <div className={`flex-1 flex flex-col relative w-full ${isList ? "py-4 pr-6" : "p-8 pt-6"}`}>
-        <div className="flex items-start justify-between gap-6">
-          <div className="flex flex-col gap-1.5 max-w-[85%]">
-            <div className="flex items-center gap-2 flex-wrap text-[10px] font-bold tracking-[0.2em] uppercase text-zinc-500">
+      {/* TEXT CONTENT */}
+      <div className={`flex-1 flex flex-col relative w-full ${isList ? "py-0 pr-2 sm:py-4 sm:pr-6 min-w-0" : "p-8 pt-6"}`}>
+        <div className="flex items-start justify-between gap-2 sm:gap-6">
+          <div className="flex flex-col gap-0.5 sm:gap-1.5 min-w-0 max-w-full sm:max-w-[85%]">
+            {/* Title */}
+            <h3 className={`font-semibold text-zinc-100 tracking-tight leading-snug ${isList ? "text-sm sm:text-xl" : "text-xl"}`}>
+              <a href={bookmark.url} onClick={(e) => onLinkClick(e, bookmark)} target="_blank" rel="noreferrer" className="hover:text-white transition-colors line-clamp-2 cursor-pointer">
+                {bookmark.episode_title}
+              </a>
+            </h3>
+
+            {/* Meta line */}
+            <div className={`flex items-center gap-1.5 sm:gap-2 flex-wrap font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase text-zinc-500 ${isList ? "text-[9px] sm:text-[10px]" : "text-[10px]"}`}>
               {(bookmark.podcast_name || bookmark.platform) && (
-                <span>{bookmark.podcast_name || bookmark.platform}</span>
+                <span className="truncate max-w-[120px] sm:max-w-none">{bookmark.podcast_name || bookmark.platform}</span>
               )}
               {bookmark.publish_date && (
                 <>
@@ -120,8 +132,8 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
               )}
               {bookmark.view_count && (
                 <>
-                  <span className="w-1 h-1 rounded-full bg-zinc-700 flex-shrink-0" />
-                  <span>
+                  <span className="w-1 h-1 rounded-full bg-zinc-700 flex-shrink-0 hidden sm:block" />
+                  <span className="hidden sm:inline">
                     {Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(bookmark.view_count))} Views
                   </span>
                 </>
@@ -135,15 +147,10 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
                 </>
               )}
             </div>
-
-            <h3 className="text-xl font-semibold text-zinc-100 tracking-tight leading-snug">
-              <a href={bookmark.url} onClick={(e) => onLinkClick(e, bookmark)} target="_blank" rel="noreferrer" className="hover:text-white transition-colors line-clamp-2 cursor-pointer">
-                {bookmark.episode_title}
-              </a>
-            </h3>
           </div>
 
-          <div className="flex gap-2 items-center flex-shrink-0">
+          {/* Share / admin buttons - hidden on mobile list view */}
+          <div className={`flex gap-2 items-center flex-shrink-0 ${isList ? "hidden sm:flex" : ""}`}>
             <button onClick={handleShare} className="p-2.5 rounded-full bg-zinc-900 border border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all" title="Share Link">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
             </button>
@@ -161,20 +168,23 @@ function SortableBookmarkItem({ bookmark, handleDelete, handleSaveNotes, isAdmin
           </div>
         </div>
 
-        {isEditing && isAdmin ? (
-          <div className="mt-6 flex flex-col gap-4 w-full">
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add minimalist insights..." className="w-full p-5 text-sm bg-black border border-white/10 rounded-[1.5rem] focus:border-white/30 text-zinc-200 outline-none resize-none transition-all placeholder:text-zinc-600" rows={3} />
-            <button onClick={() => { handleSaveNotes(bookmark.id, notes); setIsEditing(false); }} className="bg-white hover:bg-zinc-200 text-black py-3 px-6 rounded-full text-xs font-bold self-end transition-all">Save Insights</button>
-          </div>
-        ) : (
-          bookmark.notes && (
-            <div className="mt-6 pl-4 border-l-2 border-white/10">
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                {bookmark.notes}
-              </p>
+        {/* Notes section - hidden on mobile list */}
+        <div className={`${isList ? "hidden sm:block" : ""}`}>
+          {isEditing && isAdmin ? (
+            <div className="mt-6 flex flex-col gap-4 w-full">
+              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add minimalist insights..." className="w-full p-5 text-sm bg-black border border-white/10 rounded-[1.5rem] focus:border-white/30 text-zinc-200 outline-none resize-none transition-all placeholder:text-zinc-600" rows={3} />
+              <button onClick={() => { handleSaveNotes(bookmark.id, notes); setIsEditing(false); }} className="bg-white hover:bg-zinc-200 text-black py-3 px-6 rounded-full text-xs font-bold self-end transition-all">Save Insights</button>
             </div>
-          )
-        )}
+          ) : (
+            bookmark.notes && (
+              <div className="mt-6 pl-4 border-l-2 border-white/10">
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  {bookmark.notes}
+                </p>
+              </div>
+            )
+          )}
+        </div>
       </div>
     </motion.div>
   );
